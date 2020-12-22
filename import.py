@@ -1337,10 +1337,7 @@ def import_transaction(data, is_invoiced=False):
 		transaction['date_payment_completed'] = date_invoiced.isoformat()
 		transaction['invoice_generated_at'] = date_invoiced.isoformat()
 		transaction['accounting_period'] = date_invoiced.strftime('%Y-%m-01')
-		if date_invoiced.strftime('%m') == '12':
-			transaction['fiscal_year'] = int(date_invoiced.strftime('%Y')) + 1
-		else:
-			transaction['fiscal_year'] = date_invoiced.strftime('%Y')
+		transaction['fiscal_year'] = date_invoiced.strftime('%Y')
 		transaction['material_amount_invoiced'] = data['MATERIAL^AMOUNT']
 		if transaction['discount_method'] == 'B' and 'discount_percent' in transaction:
 			transaction['list_material_amount_invoiced'] = data['MATERIAL^AMOUNT'] / (1 - transaction['discount_percent'])
