@@ -898,6 +898,10 @@ def import_style(data):
 			style['selling_unit_id'] = code_roll_id
 		elif data['UNIT^OF^MEASURE'].strip() == 'EACH':
 			style['selling_unit_id'] = code_each_id
+		elif pattern_valid_unit.match(data['UNIT^OF^MEASURE']):
+			# In the future, this should be modified to automatically create the unit of measure
+			pass
+
 	if 'selling_unit_id' not in style:
 		style['selling_unit_id'] = code_unknown_unit_id
 
@@ -910,6 +914,10 @@ def import_style(data):
 			style['mill_unit_id'] = code_roll_id
 		elif data['MILLS^UNIT OF^MEAS'].strip() == 'EACH':
 			style['mill_unit_id'] = code_each_id
+		elif pattern_valid_unit.match(data['MILLS^UNIT OF^MEAS']):
+			# In the future, this should be modified to automatically create the unit of measure
+			pass
+
 	if 'mill_unit_id' not in style:
 		style['mill_unit_id'] = code_unknown_unit_id
 
@@ -1843,6 +1851,7 @@ pattern_debit_memo = re.compile(r"^DM [\d]{6}$")
 pattern_transaction_number = re.compile(r"^([\d]{6})-([\d]{2})$")
 pattern_ar_invoice = re.compile(r"^(DI|[DC]M)\s([\d]{6})")
 pattern_ar_payment = re.compile(r"^CP\s([\d]{6})")
+pattern_valid_unit = re.compile(r"^[a-z]", re.IGNORECASE)
 
 if config['import'].getboolean('codes'):
 	print("Importing codes...")
@@ -1979,6 +1988,8 @@ if config['import'].getboolean('styles'):
 		import_harmonized(style)
 		if index % 500 == 0:
 			db.commit()
+	cursor.execute("update `code` inner join `style` on `code`.`id` = `style`.`selling_unit_id` set `code`.`um_selling_unit` = 1 where `code`.`company_id` = %s", (company))
+	cursor.execute("update `code` inner join `style` on `code`.`id` = `style`.`mill_unit_id` set `code`.`um_mill_unit` = 1 where `code`.`company_id` = %s", (company))
 	cursor.execute("insert into `style` (`company_id`, `line_id`, `name`, `product_category_code_id`, `default_warehouse_id`, `selling_unit_id`, `mill_unit_id`, `vendor_id`, `standard_quantity`, `legacy_style_number`) values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", (company, line, 'Unknown', code_unknown_product_category_id, warehouse_def_id, code_unknown_unit_id, code_unknown_unit_id, unknown_vendor['id'], 1, 'UNK'))
 	unknown_style = get_object('style', 'id', cursor.lastrowid)
 else:
