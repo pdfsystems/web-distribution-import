@@ -27,6 +27,7 @@ bucket=
 codes=yes
 warehouses=yes
 vendors=yes
+vendor_employees=yes
 reps=yes
 rep_employees=yes
 customers=yes

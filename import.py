@@ -568,6 +568,41 @@ def import_vendor(data):
 					 phone_number=data['VENDOR^PHONE 2'],
 					 primary=False)
 
+def import_vendor_employee(data):
+	vendor = get_object('vendor', 'legacy_vendor_code', data['CUSTOMER #'])
+	if vendor is None:
+		print(f"Skipping employee with missing vendor {data['CUSTOMER #']}")
+		return
+
+	if isset(data['EMAIL ADDRESS']):
+		at_position = data['EMAIL ADDRESS'].find('@')
+		employee = {
+			'company_id': company,
+			'country_id': vendor['country_id'],
+			'created_at': now,
+			'customer_service': 1,
+			'employer_id': vendor['id'],
+			'employer_type': 'Vendor',
+			'updated_at': now,
+		}
+		if at_position > 0:
+			employee['name'] = data['EMAIL ADDRESS'][:at_position]
+			if isset(data['EMPLOYEE NAME']):
+				employee['name'] = data['EMPLOYEE NAME']
+			employee_id = insert_object('employee', employee)
+			email = {
+				'created_at': now,
+				'email_address': data['EMAIL ADDRESS'],
+				'emailable_id': employee_id,
+				'emailable_type': 'Employee',
+				'name': 'Primary',
+				'primary': 1,
+				'updated_at': now,
+			}
+			insert_object('email', email)
+		else:
+			print(f"Skipping vendor employee with invalid email address ({data['EMAIL ADDRESS']})")
+
 def import_customer(data):
 	if isempty(data['CUSTOMER NAME']):
 		data['CUSTOMER NAME'] = data['CUST #']
@@ -1688,6 +1723,9 @@ if config['import'].getboolean('styles'):
 	cursor.execute("delete from `item_price` where `company_id` = %s and `priceable_type` = 'Style'", company)
 	cursor.execute("delete from `style_cost` where `style_id` not in (select `id` from `style`)")
 
+if config['import'].getboolean('vendor_employees'):
+	cursor.execute("delete `employee`, `email` from `vendor` inner join `employee` on `vendor`.`id` = `employee`.`employer_id` and `employee`.`employer_type` = 'Vendor' left join `email` on `employee`.`id` = `email`.`emailable_id` and `email`.`emailable_type` = 'Employee' where `vendor`.`company_id` = %s", company)
+
 if config['import'].getboolean('vendors'):
 	cursor.execute("delete `address` from `address` inner join `vendor` on `address`.`addressable_id` = `vendor`.`id` and `address`.`addressable_type` = 'Vendor' where `vendor`.`company_id` = %s", (company))
 	cursor.execute("delete from `address` where `addressable_type` = 'Vendor' and `addressable_id` not in (select `id` from `vendor`)")
@@ -1844,6 +1882,15 @@ if config['import'].getboolean('vendors'):
 	db.commit()
 else:
 	unknown_vendor = get_object('vendor', 'legacy_vendor_code', 'UNK')
+
+if config['import'].getboolean('vendor_employees'):
+	print("Importing vendor employees...")
+	employees = get_iterator(data_directory + 'VENDEML.TXT')
+	for index,employee in employees:
+		import_vendor_employee(employee)
+		if index % 500 == 0:
+			db.commit()
+	db.commit()
 
 if config['import'].getboolean('reps'):
 	print("Importing reps...")
