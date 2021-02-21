@@ -1077,9 +1077,6 @@ def import_item(data):
 	except pymysql.err.IntegrityError:
 		print(f"Skipping duplicate item #{data['ITEM^NUMBER']}")
 
-	cursor.execute("select `style`.`export_to_ordertrack`, `style`.`new_book`, `item_price`.`wholesale_price`, `code`.`abbreviation` as `product_category`, `style`.`date_introduced` from `style` left join `item_price` on `style`.`id` = `item_price`.`priceable_id` and `item_price`.`priceable_type` = 'Style' inner join `code` on `style`.`product_category_code_id` = `code`.`id` where `style`.`id` = %s", (item['style_id']))
-	style = cursor.fetchone()
-
 def import_service(data):
 	service = {
 		'company_id': company,
