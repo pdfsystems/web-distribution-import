@@ -934,6 +934,7 @@ def import_style(data):
 			'wholesale_price': data['PRICE 1'],
 			'priceable_id': style_id,
 			'priceable_type': 'Style',
+			'primary': 1,
 			'created_at': now,
 			'updated_at': now,
 		})
