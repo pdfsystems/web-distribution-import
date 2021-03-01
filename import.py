@@ -1871,7 +1871,7 @@ if config['import'].getboolean('warehouses'):
 	for index,warehouse in warehouses:
 		if warehouse['TYPE'] == 'W':
 			import_warehouse(warehouse)
-	cursor.execute("update `line` set `default_warehouse_id` = (select `id` from `warehouse` where `company_id` = %s and `code` = %s limit 1)", (company, default_warehouse_code))
+	cursor.execute("update `line` set `default_warehouse_id` = (select `id` from `warehouse` where `company_id` = %s and `code` = %s limit 1) where `company_id` = %s", (company, default_warehouse_code, company))
 	db.commit()
 warehouse_def_id = get_column('line', 'default_warehouse_id', 'id', line)
 
