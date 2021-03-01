@@ -854,7 +854,6 @@ def import_style(data):
 		intro_date = date.today()
 
 	style = {
-		'additional_description': data['BOOK ID'],
 		'broker_cost': data['ESTIMATED^FRT'],
 		'comment': combine(data, ('COMMENT 1', 'COMMENT 2', 'COMMENT 3'), "\n"),
 		'company_id': company,
