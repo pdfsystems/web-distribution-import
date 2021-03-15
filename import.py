@@ -946,7 +946,7 @@ def import_style(data):
 			'updated_at': now,
 		})
 
-	if data['MILLS^COST 1']:
+	if data['MILLS^COST 1'] > 0:
 		insert_object('style_cost', {
 			'style_id': style_id,
 			'effective_date': now,
@@ -956,7 +956,7 @@ def import_style(data):
 			'updated_at': now,
 		})
 
-	if data['MILLS^COST 2']:
+	if data['MILLS^COST 2'] > 0:
 		try:
 			insert_object('style_cost', {
 				'style_id': style_id,
@@ -971,7 +971,7 @@ def import_style(data):
 		except pymysql.err.DataError:
 			print(f"Not importing invalid cost ({data['MILLS^COST 2']})")
 
-	if data['MILLS^COST 3']:
+	if data['MILLS^COST 3'] > 0:
 		try:
 			insert_object('style_cost', {
 				'style_id': style_id,
