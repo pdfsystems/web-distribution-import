@@ -495,6 +495,7 @@ def import_vendor(data):
 		'ship_via': data['SHIP VIA'],
 		'terms_id': get_code_id(13, data['TERMS^CODE'], True),
 		'updated_at': date_established.isoformat(),
+		'cut_yardage': '1' if data['DROP^SHIP^FLAG'] == 'Y' else '0',
 	}
 
 	cursor.execute("select * from `vendor` where `company_id` = %s and `name` = %s", (company, str(data['VENDOR NAME'])))
@@ -1286,6 +1287,7 @@ def import_transaction(data, is_invoiced=False):
 		'user_id': user,
 		'warehouse_id': warehouse_def_id,
 		'weight': data['WGHT'],
+		'mill_cut_yardage': '1' if data['CUT YARDAGE^ORDER'] == 'C' else '0',
 	}
 
 	if isempty(transaction['rep1_id']):
@@ -1293,6 +1295,15 @@ def import_transaction(data, is_invoiced=False):
 
 	transaction['state_tax_amount'] = data['TAX^AMOUNT']
 	
+	if transaction['mill_cut_yardage'] == '1':
+		if data['MILL^STK^FLG'] == 'Y':
+			transaction['cut_yardage_shippable'] = now
+			transaction['cut_yardage_reserve'] = now
+		elif data['MILL^STK^FLG'] == 'N':
+			transaction['cut_yardage_reserve'] = now
+		else:
+			# If the mill stock flag is blank, we don't do anything extra for cut yardage orders
+			pass
 
 	match = pattern_transaction_number.match(data['ORDER #'])
 	if match:
@@ -1482,7 +1493,7 @@ def import_transaction_item(data, is_invoiced=False):
 	insert_object('transaction_item', record)
 
 def import_transaction_allocation(data, log=True):
-	cursor.execute("select `transaction_item`.`id`, `transaction_item`.`item_id` from `transaction` inner join `transaction_item` on `transaction`.`id` = `transaction_item`.`transaction_id` where `transaction`.`company_id` = %s and `transaction`.`legacy_transaction_number` = %s and `transaction_item`.`line_number` = %s", (company, data['ORDER #'], data['LIN^NUM']))
+	cursor.execute("select `transaction_item`.`id`, `transaction_item`.`item_id`, `transaction`.`mill_cut_yardage` from `transaction` inner join `transaction_item` on `transaction`.`id` = `transaction_item`.`transaction_id` where `transaction`.`company_id` = %s and `transaction`.`legacy_transaction_number` = %s and `transaction_item`.`line_number` = %s", (company, data['ORDER #'], data['LIN^NUM']))
 	detail_record = cursor.fetchone()
 	if detail_record is None:
 		print(f"Skipping transaction allocation for missing transaction item {data['ORDER #']}/{data['LIN^NUM']}")
@@ -1492,20 +1503,24 @@ def import_transaction_allocation(data, log=True):
 		print(f"Skipping transaction allocation for missing lot/piece ({data['LOT^NUMBER']}/{data['PCE^NUMBER']})")
 		return
 
-	cursor.execute("select `id` from `inventory` where `item_id` = %s and `lot` = %s and `piece` = %s", (detail_record['item_id'], data['LOT^NUMBER'], data['PCE^NUMBER']))
-	inventory_record = cursor.fetchone()
-	if inventory_record is None:
-		if log:
-			print(f"Skipping transaction allocation for missing piece {detail_record['item_id']}/{data['LOT^NUMBER']}/{data['PCE^NUMBER']}")
-		return
-
 	record = {
 		'active': 0,
 		'customer_quantity': data['QTY^SHPD^FROM^PCE'],
-		'inventory_id': inventory_record['id'],
 		'quantity': data['QTY^SHPD^FROM^PCE'],
 		'transaction_item_id': detail_record['id'],
 	}
+
+	if detail_record['mill_cut_yardage'] == 1:
+		record['cut_yardage_lot'] = data['LOT^NUMBER']
+		record['cut_yardage_piece'] = data['PCE^NUMBER']
+	else:
+		cursor.execute("select `id` from `inventory` where `item_id` = %s and `lot` = %s and `piece` = %s", (detail_record['item_id'], data['LOT^NUMBER'], data['PCE^NUMBER']))
+		inventory_record = cursor.fetchone()
+		if inventory_record is None:
+			if log:
+				print(f"Skipping transaction allocation for missing piece {data['ORDER #']}/{detail_record['item_id']}/{data['LOT^NUMBER']}/{data['PCE^NUMBER']}")
+			return
+		record['inventory_id'] = inventory_record['id']
 
 	try:
 		insert_object('transaction_allocated_piece', record)
@@ -2154,6 +2169,7 @@ if config['import'].getboolean('open_transactions') or config['import'].getboole
 	cursor.execute(f"update `transaction` set `client_auth_key` = replace(uuid() collate {config['mysql']['collation']}, '-', '') where `company_id` = %s and `client_auth_key` is null", company)
 	cursor.execute("update `transaction` left join (select `transaction_id`, max(`line_number`) as `max_line_number` from `transaction_item` group by `transaction_id`) as `items` on `transaction`.`id` = `items`.`transaction_id` left join (select `transaction_id`, max(`line_number`) as `max_line_number` from `transaction_service` group by `transaction_id`) as `services` on `transaction`.`id` = `services`.`transaction_id` set `transaction`.`next_line_number` = ifnull(greatest(`items`.`max_line_number`, `services`.`max_line_number`), 0) + 1 where `transaction`.`company_id` = %s", company)
 	cursor.execute("update `code` set `h_hold_type` = 'G' where `h_hold_type` is null and `company_id` = %s and `type_id` = 10", (company))
+	cursor.execute("update `transaction` inner join `transaction_item` on `transaction`.`id` = `transaction_item`.`transaction_id` inner join `item` on `transaction_item`.`item_id` = `item`.`id` inner join `style` on `item`.`style_id` = `style`.`id` inner join `vendor` on `style`.`vendor_id` = `vendor`.`id` set `transaction`.`vendor_id` = `vendor`.`id` where `transaction`.`company_id` = %s and `vendor`.`cut_yardage` = 1", company)
 
 if config['import'].getboolean('accounts_receivable'):
 	print("Importing accounts receivable...")
