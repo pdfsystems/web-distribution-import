@@ -2185,7 +2185,6 @@ if config['import'].getboolean('open_transactions') or config['import'].getboole
 	cursor.execute(f"update `transaction` set `client_auth_key` = replace(uuid() collate {config['mysql']['collation']}, '-', '') where `company_id` = %s and `client_auth_key` is null", company)
 	cursor.execute("update `transaction` left join (select `transaction_id`, max(`line_number`) as `max_line_number` from `transaction_item` group by `transaction_id`) as `items` on `transaction`.`id` = `items`.`transaction_id` left join (select `transaction_id`, max(`line_number`) as `max_line_number` from `transaction_service` group by `transaction_id`) as `services` on `transaction`.`id` = `services`.`transaction_id` set `transaction`.`next_line_number` = ifnull(greatest(`items`.`max_line_number`, `services`.`max_line_number`), 0) + 1 where `transaction`.`company_id` = %s", company)
 	cursor.execute("update `code` set `h_hold_type` = 'G' where `h_hold_type` is null and `company_id` = %s and `type_id` = 10", (company))
-	cursor.execute("update `transaction` inner join `transaction_item` on `transaction`.`id` = `transaction_item`.`transaction_id` inner join `item` on `transaction_item`.`item_id` = `item`.`id` inner join `style` on `item`.`style_id` = `style`.`id` inner join `vendor` on `style`.`vendor_id` = `vendor`.`id` set `transaction`.`vendor_id` = `vendor`.`id` where `transaction`.`company_id` = %s and `vendor`.`cut_yardage` = 1", company)
 
 if config['import'].getboolean('accounts_receivable'):
 	print("Importing accounts receivable...")
