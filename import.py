@@ -1296,14 +1296,17 @@ def import_transaction(data, is_invoiced=False):
 	transaction['state_tax_amount'] = data['TAX^AMOUNT']
 	
 	if transaction['mill_cut_yardage'] == '1':
-		if data['MILL^STK^FLG'] == 'Y':
+		transaction['cut_yardage_reserve'] = now
+		transaction['vendor_id'] = get_id('vendor', 'legacy_vendor_code', data['CUT YARDAGE^VENDOR #'])
+
+		if data['FAX^RPT^FLG'] in ['T','S']:
 			transaction['cut_yardage_shippable'] = now
-			transaction['cut_yardage_reserve'] = now
-		elif data['MILL^STK^FLG'] == 'N':
-			transaction['cut_yardage_reserve'] = now
-		else:
-			# If the mill stock flag is blank, we don't do anything extra for cut yardage orders
-			pass
+
+		if data['MILL^STK^FLG'] in ['Y', 'N']:
+			transaction['mill_cut_yardage_received_status'] = '1'
+
+		if data['CUTTING^ARRIVED^FLAG'] == 'Y':
+			transaction['cut_yardage_cfa_arrived'] = '1'
 
 	match = pattern_transaction_number.match(data['ORDER #'])
 	if match:
@@ -1333,7 +1336,10 @@ def import_transaction(data, is_invoiced=False):
 		
 	if is_invoiced:
 		transaction['backordered'] = 0
-	else:
+	elif transaction['mill_cut_yardage'] == '1' and data['MILL^STK^FLG'] != 'N':
+		transaction['backordered'] = 0
+
+	if 'backordered' not in transaction:
 		transaction['backordered'] = 1
 
 	if data['DISC^PCT'] > 0:
@@ -1470,6 +1476,12 @@ def import_transaction_item(data, is_invoiced=False):
 		'unit_conversion_factor': 1,
 		'updated_at': now,
 	}
+
+	if isset(data['MILL SHIP^DATE']):
+		record['cut_yardage_mill_ship_date'] = parse(data['MILL SHIP^DATE']).isoformat()
+
+	if isset(data['OUR SHIP^DATE']):
+		record['cut_yardage_ship_date'] = parse(data['OUR SHIP^DATE']).isoformat()
 
 	try:
 		record['line_number'] = int(data['LIN^NUM'])
