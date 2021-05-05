@@ -1320,6 +1320,9 @@ def import_transaction(data, is_invoiced=False):
 			transaction['invoice_count'] = -1
 		elif pattern_debit_memo.match(data['ORDER #']):
 			transaction['transaction_type_id'] = 8
+		elif pattern_quote.match(data['ORDER #']):
+			transaction['transaction_type_id'] = 2
+			transaction['backordered'] = 0
 
 		transaction['transaction_number'] = next_sequential_number('transaction_number')
 		transaction['transaction_number_suffix'] = 0
@@ -1871,6 +1874,7 @@ pattern_deleted_customer = re.compile(r'\*{2,}\s+?(closed|filming complete)', re
 pattern_discontinue_code = re.compile(r"(([A-Z]+)-)?([\d]{2}/[\d]{2}(/[\d]{2,4})?)")
 pattern_credit_memo = re.compile(r"^CM [\d]{6}$")
 pattern_debit_memo = re.compile(r"^DM [\d]{6}$")
+pattern_quote = re.compile(r"^QU [\d]{6}$")
 pattern_transaction_number = re.compile(r"^([\d]{6})-([\d]{2})$")
 pattern_ar_invoice = re.compile(r"^(DI|[DC]M)\s([\d]{6})")
 pattern_ar_payment = re.compile(r"^CP\s([\d]{6})")
