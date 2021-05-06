@@ -1202,6 +1202,7 @@ def import_purchase_order_item(data):
 		'comment': data['COMMENT'],
 		'company_exchange_rate': 1,
 		'confirmation_comment': data['CONF #'],
+		'created_at': now,
 		'item_id': item_id,
 		'line_number': data['LINE^#'],
 		'material_cost': data['UNIT^COST^DOLLARS'],
@@ -1213,6 +1214,7 @@ def import_purchase_order_item(data):
 		'purchase_order_id': purchase_order['id'],
 		'remaining_quantity': data['QTY ORDERED'],
 		'remaining_quantity_mill': data['P.O.^QTY^ORDERED'],
+		'updated_at': now,
 	}
 
 	if isset(data['MILL^SHIP^DATE']):
