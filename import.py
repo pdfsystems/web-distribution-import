@@ -1815,10 +1815,7 @@ if config['import'].getboolean('codes'):
 db.commit()
 
 currency_usd_id = get_id('currency', 'code', 'USD', False)
-currency_cad_id = get_id('currency', 'code', 'CAD', False)
-
 country_us_id = get_id('country', 'code', 'US', False)
-country_ca_id = get_id('country', 'code', 'CA', False)
 
 carrier_ups_id = get_id('carrier', 'name', 'UPS', False)
 carrier_fedex_id = get_id('carrier', 'name', 'FedEx', False)
