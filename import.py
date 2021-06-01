@@ -1812,29 +1812,6 @@ if config['import'].getboolean('codes'):
 	cursor.execute("delete from `carrier` where `company_id` = %s", company)
 	cursor.execute("delete from `shipping_service` where `company_id` = %s", company)
 
-carriers = [
-	'Canpar',
-	'Greyhound',
-	'Pickup',
-	'Loomis',
-	'Canada Post',
-	'Purolator',
-	'Reliable'
-]
-
-shipping_services = [
-	'Express Saver',
-	'Mail',
-	'Pickup'
-]
-
-if config['import'].getboolean('codes'):
-	for carrier in carriers:
-		cursor.execute("insert into `carrier` (`company_id`, `name`, `charge_freight`, `created_at`, `updated_at`) values(%s, %s, 0, now(), now())", (company, carrier))
-
-	for shipping_service in shipping_services:
-		cursor.execute("insert into `shipping_service` (`company_id`, `name`, `calculable`, `created_at`, `updated_at`) values(%s, %s, 0, now(), now())", (company, shipping_service))
-
 db.commit()
 
 currency_usd_id = get_id('currency', 'code', 'USD', False)
