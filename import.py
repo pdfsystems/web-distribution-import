@@ -1835,14 +1835,9 @@ code_unknown_product_category_id = get_unknown_code(1)
 code_unknown_payment_id = get_unknown_code(8)
 code_yard_id = get_code_id(15, 'Yard')
 code_meter_id = get_code_id(15, 'Meter')
-if config['import'].getboolean('codes'):
-	code_roll_id = insert_object('code', { 'company_id': company, 'type_id': 15, 'name': 'Roll', 'um_unit_type_id': get_id('unit_type', 'name', 'Each', False), 'um_conversion_factor': '1' })
-else:
-	code_roll_id = get_code_id(15, 'Roll')
 code_each_id = get_code_id(15, 'Each')
 code_discontinued_id = get_code_id(7, 'Discontinued')
 code_standard_package_id = create_code_id('STD', 20, 'Standard')
-code_oversized_package_id = create_code_id('OVR', 20, 'Oversized')
 
 pattern_us_zip = re.compile(r'^[\d]{5}')
 pattern_deleted_rep = re.compile(r'^z', re.IGNORECASE)
