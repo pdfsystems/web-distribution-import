@@ -938,7 +938,7 @@ def import_style(data):
 			'company_id': company,
 			'line_id': line,
 			'currency_id': currency_usd_id,
-			'unit_id': code_yard_id,
+			'unit_id': style['selling_unit_id'],
 			'wholesale_price': data['PRICE 1'],
 			'priceable_id': style_id,
 			'priceable_type': 'Style',
