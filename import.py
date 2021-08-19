@@ -531,7 +531,7 @@ def import_vendor(data):
 
 	vendor['currency_id'] = get_id('currency', 'code', data['CURRENCY^CODE'], False)
 
-	if vendor['country_id'] != country_us_id and vendor['country_id'] != country_ca_id:
+	if vendor['country_id'] != country_us_id:
 		vendor['foreign'] = '1'
 
 	if data['VENDOR^PHONE^TYP 1'] == 'F':
@@ -1860,7 +1860,6 @@ if config['import'].getboolean('codes'):
 	cursor.execute("update `code` set `abbreviation` = 'UNK' where `company_id` = %s and `name` = 'Unknown'", company)
 	cursor.execute("update `code` set `at_proforma` = 1 where `company_id` = %s and `type_id` = 13 and `name` like %s", (company, '%forma%'))
 	cursor.execute("update `code` set `at_proforma` = 0 where `company_id` = %s and `type_id` = 13 and `at_proforma` is null", company)
-	cursor.execute("update `warehouse` set `country_id` = %s where `company_id` = %s and `code` = %s", (country_ca_id, company, 'HS'))
 	cursor.execute("update `code` set `pkg_length` = 36, `pkg_width` = 6, `pkg_height` = 6 where `company_id` = %s and `type_id` = 20", company)
 	cursor.execute("update `line` set `default_package_code_id` = %s where `company_id` = %s", (code_standard_package_id, company))
 carrier_def_id = get_column('company_default', 'customer_carrier_id', 'company_id', company)
