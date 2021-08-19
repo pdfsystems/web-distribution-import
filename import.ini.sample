@@ -3,7 +3,6 @@ host=
 user=
 password=
 schema=
-collation=utf8_unicode_ci
 
 [data]
 directory=

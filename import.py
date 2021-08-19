@@ -1253,6 +1253,7 @@ def import_transaction(data, is_invoiced=False):
 		order_date = date.today()
 	transaction = {
 		'active': 1,
+		'client_auth_key': str(uuid.uuid4()).replace('-', ''),
 		'company_id': company,
 		'created_at': order_date.isoformat(),
 		'customer_attention': data['BILL TO ATTENTION'],
@@ -1265,6 +1266,7 @@ def import_transaction(data, is_invoiced=False):
 		'guaranteed_by': data['GUARANTEED BY'],
 		'legacy_transaction_number': data['ORDER #'],
 		'line_id': line,
+		'mill_cut_yardage': '1' if data['CUT YARDAGE^ORDER'] == 'C' else '0',
 		'notification_generated_at': now,
 		'order_terms_id': get_code_id(13, data['TRMS^CDE']),
 		'packages': data['# OF^PCK'],
@@ -1289,7 +1291,6 @@ def import_transaction(data, is_invoiced=False):
 		'user_id': user,
 		'warehouse_id': warehouse_def_id,
 		'weight': data['WGHT'],
-		'mill_cut_yardage': '1' if data['CUT YARDAGE^ORDER'] == 'C' else '0',
 	}
 
 	if isempty(transaction['rep1_id']):
@@ -2153,7 +2154,6 @@ if config['import'].getboolean('open_transactions') or config['import'].getboole
 	cursor.execute("update `transaction` inner join `currency` on `transaction`.`currency_id` = `currency`.`id` set `transaction`.`exchange_rate_entered` = 1 / `currency`.`exchange_rate`, `transaction`.`exchange_rate_invoiced` = 1 / `currency`.`exchange_rate` where `transaction`.`company_id` = %s and `transaction`.`status` = 'S'", company)
 	cursor.execute("update `transaction` inner join `currency` on `transaction`.`currency_id` = `currency`.`id` set `transaction`.`exchange_rate_entered` = 1 / `currency`.`exchange_rate` where `transaction`.`company_id` = %s and `transaction`.`status` = 'O'", company)
 	cursor.execute("update `transaction` inner join `transaction_hold` on `transaction`.`id` = `transaction_hold`.`transaction_id` set `transaction_hold`.`released_by_user_id` = %s, `transaction_hold`.`released_at` = now() where `transaction`.`company_id` = %s and `transaction`.`status` = 'S'", (user, company))
-	cursor.execute(f"update `transaction` set `client_auth_key` = replace(uuid() collate {config['mysql']['collation']}, '-', '') where `company_id` = %s and `client_auth_key` is null", company)
 	cursor.execute("update `transaction` left join (select `transaction_id`, max(`line_number`) as `max_line_number` from `transaction_item` group by `transaction_id`) as `items` on `transaction`.`id` = `items`.`transaction_id` left join (select `transaction_id`, max(`line_number`) as `max_line_number` from `transaction_service` group by `transaction_id`) as `services` on `transaction`.`id` = `services`.`transaction_id` set `transaction`.`next_line_number` = ifnull(greatest(`items`.`max_line_number`, `services`.`max_line_number`), 0) + 1 where `transaction`.`company_id` = %s", company)
 	cursor.execute("update `code` set `h_hold_type` = 'G' where `h_hold_type` is null and `company_id` = %s and `type_id` = 10", (company))
 
