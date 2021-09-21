@@ -2000,7 +2000,6 @@ if config['import'].getboolean('items'):
 		import_item(item)
 		if index % 500 == 0:
 			db.commit()
-	cursor.execute("update `style` set `deleted_at` = now() where `id` not in (select `style_id` from `item` where `discontinue_code_id` is null and `company_id` = %s group by `style_id`) and `company_id` = %s", (company, company))
 
 if config['import'].getboolean('services'):
 	print("Importing services...")
