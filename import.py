@@ -1180,8 +1180,6 @@ def import_inventory(data):
         'exchange_rate_receipt': 1,
         'company_exchange_rate_entry': 1,
         'company_exchange_rate_receipt': 1,
-        'source_id': 0,
-        'source_type': 'Import',
         'created_at': date_received.isoformat(),
         'updated_at': now,
         'accounting_period': date_received.strftime('%Y-%m-01'),
