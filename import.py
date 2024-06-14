@@ -37,7 +37,6 @@ cursor = db.cursor()
 data_directory = config['data']['directory'] + '/' + config['data']['version'] + '/'
 
 company = config['wd']['company_id']
-line = config['wd']['line_id']
 user = config['wd']['user_id']
 default_warehouse_code = config['default']['warehouse_code']
 now = date.today().isoformat()
@@ -46,6 +45,17 @@ get_ids = {}
 vendor_check_to = {}
 selling_unit_ids = {}
 mill_unit_ids = {}
+
+
+def get_line_id(line_code: str) -> int:
+    if line_code == 'CS':
+        return 91
+    elif line_code == 'HC':
+        return 92
+    elif line_code == 'DK':
+        return 93
+    else:
+        return 90
 
 
 def insert_object(table, object, catch=False):
@@ -308,6 +318,9 @@ def insert_address(source_id, source_type, street, city, country_id, name='Prima
 
 
 def insert_phone(source_id, source_type, country_id, phone_number, primary=True):
+    if isempty(phone_number):
+        return None
+
     phone_number = re.sub(r'[^\d]', '', phone_number)
 
     phone = {
@@ -916,7 +929,7 @@ def import_style(data):
         'label_message': combine(data, ('LABEL DESCRIPTION 1', 'LABEL DESCRIPTION 2'), "\n"),
         'lead_time': data['LEAD^TIME'] * 7,
         'legacy_style_number': data['PATTERN^NUMBER'],
-        'line_id': line,
+        'line_id': get_line_id(data['ACCOUNTING^CODE']),
         'minimum_order_quantity': data['MILLS^MINIMUM^ORDER'],
         'misc_cost': data['MISC^COST'],
         'name': data['PATTERN NAME'],
@@ -943,8 +956,6 @@ def import_style(data):
             style['selling_unit_id'] = code_yard_id
         elif data['UNIT^OF^MEASURE'][0] == 'M':
             style['selling_unit_id'] = code_meter_id
-        elif data['UNIT^OF^MEASURE'][0] == 'R':
-            style['selling_unit_id'] = code_roll_id
         elif data['UNIT^OF^MEASURE'].strip() == 'EACH':
             style['selling_unit_id'] = code_each_id
         elif pattern_valid_unit.match(data['UNIT^OF^MEASURE']):
@@ -959,8 +970,6 @@ def import_style(data):
             style['mill_unit_id'] = code_yard_id
         elif data['MILLS^UNIT OF^MEAS'][0] == 'M':
             style['mill_unit_id'] = code_meter_id
-        elif data['MILLS^UNIT OF^MEAS'][0] == 'R':
-            style['mill_unit_id'] = code_roll_id
         elif data['MILLS^UNIT OF^MEAS'].strip() == 'EACH':
             style['mill_unit_id'] = code_each_id
         elif pattern_valid_unit.match(data['MILLS^UNIT OF^MEAS']):
@@ -986,7 +995,7 @@ def import_style(data):
     if data['PRICE 1'] > 0:
         insert_object('item_price', {
             'company_id': company,
-            'line_id': line,
+            'line_id': style['line_id'],
             'currency_id': currency_usd_id,
             'unit_id': style['selling_unit_id'],
             'wholesale_price': data['PRICE 1'],
@@ -1100,11 +1109,12 @@ def get_discontinue_code_id(value):
 
 
 def import_item(data):
+    style = get_object('style', 'legacy_style_number', data['PATTERN^NUMBER'])
     item = {
         'company_id': company,
-        'line_id': line,
+        'line_id': style['line_id'],
         'item_number': data['ITEM^NUMBER'],
-        'style_id': get_id('style', 'legacy_style_number', data['PATTERN^NUMBER']),
+        'style_id': style['id'],
         'color_name': data['COLOR^NAME'],
         'mill_description': data['MILL ITEM^NUMBER'],
         'comment': combine(data, ('COLOR COMMENT 1', 'COLOR COMMENT 2')),
@@ -1163,12 +1173,14 @@ def import_inventory(data):
     except:
         date_received = date.today()
 
+    item = get_object('item', 'item_number', data['ITEM #'])
+
     inventory = {
         'company_id': company,
-        'line_id': line,
+        'line_id': item['line_id'],
         'user_id': user,
         'vendor_id': unknown_vendor['id'],
-        'item_id': get_id('item', 'item_number', data['ITEM #']),
+        'item_id': item['id'],
         'lot': data['LOT #'],
         'piece': data['PCE'],
         'mill_piece': data['MILLS^PIECE ID'],
@@ -1223,7 +1235,7 @@ def import_purchase_order(data):
         'discount_percent': data['DISCOUNT^PERCENT'] / 100,
         'fob': data['FOB'],
         'freight_terms': data['FREIGHT TERMS'],
-        'line_id': line,
+        'line_id': get_line_id(data['SALES^TYPE']),
         'purchase_order_number': re.sub(r'[^\d]', '', data['P.O. #']),
         'ship_to_attention': data['ATTENTION'],
         'ship_to_city': data['CITY'],
@@ -1327,7 +1339,7 @@ def import_transaction(data, is_invoiced=False):
         'freight_terms': data['FREIGHT TERMS'],
         'guaranteed_by': data['GUARANTEED BY'],
         'legacy_transaction_number': data['ORDER #'],
-        'line_id': line,
+        'line_id': get_line_id(data['SALES^TYPE']),
         'mill_cut_yardage': '1' if data['CUT YARDAGE^ORDER'] == 'C' else '0',
         'notification_generated_at': now,
         'order_terms_id': get_code_id(13, data['TRMS^CDE']),
@@ -1736,7 +1748,6 @@ def import_accounts_receivable(data):
         'currency_id': customer['currency_id'],
         'customer_id': customer['id'],
         'exchange_rate': 1,
-        'line_id': line,
         'payment_code_id': code_unknown_payment_id,
         'payment_date': payment_date.isoformat(),
         'updated_at': now,
@@ -1749,6 +1760,7 @@ def import_accounts_receivable(data):
 
     if isset(data['ORDER^NUMBER']):
         transaction = get_object('transaction', 'legacy_transaction_number', data['ORDER^NUMBER'])
+        record['line_id'] = transaction['line_id']
 
     if invoice_match is not None:
         if amount > 0 or pattern_credit_memo.match(data['REFERENCE^NUMBER']) is not None:
@@ -2030,7 +2042,7 @@ if config['import'].getboolean('warehouses'):
         "update `line` set `default_warehouse_id` = (select `id` from `warehouse` where `company_id` = %s and `code` = %s limit 1) where `company_id` = %s",
         (company, default_warehouse_code, company))
     db.commit()
-warehouse_def_id = get_column('line', 'default_warehouse_id', 'id', line)
+warehouse_def_id = get_column('line', 'default_warehouse_id', 'id', get_line_id('QU'))
 
 if config['import'].getboolean('vendors'):
     print("Importing vendors...")
@@ -2155,7 +2167,7 @@ if config['import'].getboolean('styles'):
         (company))
     cursor.execute(
         "insert into `style` (`company_id`, `line_id`, `name`, `product_category_code_id`, `default_warehouse_id`, `selling_unit_id`, `mill_unit_id`, `vendor_id`, `standard_quantity`, `legacy_style_number`) values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-        (company, line, 'Unknown', code_unknown_product_category_id, warehouse_def_id, code_unknown_unit_id,
+        (company, get_line_id('QU'), 'Unknown', code_unknown_product_category_id, warehouse_def_id, code_unknown_unit_id,
          code_unknown_unit_id, unknown_vendor['id'], 1, 'UNK'))
     unknown_style = get_object('style', 'id', cursor.lastrowid)
 else:
