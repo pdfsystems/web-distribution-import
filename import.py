@@ -945,6 +945,9 @@ def import_style(data):
         'width': data['WIDTH'],
     }
 
+    if style['lead_time'] < 0:
+        style['lead_time'] = None
+
     style['standard_quantity'] = max(style['minimum_order_quantity'], 1)
     style['shipping_weight'] = style['weight']
 
@@ -1174,6 +1177,10 @@ def import_inventory(data):
         date_received = date.today()
 
     item = get_object('item', 'item_number', data['ITEM #'])
+
+    if item is None:
+        print(f"Skipping inventory for missing item ({data['ITEM #']})")
+        return
 
     inventory = {
         'company_id': company,
