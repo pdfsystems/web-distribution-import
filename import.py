@@ -568,18 +568,17 @@ def import_vendor(data):
     if isempty(vendor['country_id']):
         vendor['country_id'] = country_us_id
 
-    if data['CURRENCY^CODE'] == "EU" or data['CURRENCY^CODE'] == "DM" or data['CURRENCY^CODE'] == "DK" or data[
-        'CURRENCY^CODE'] == "FF":
+    if data['CURRENCY^CODE'] == "EU" or data['CURRENCY^CODE'] == "EURO" or data['CURRENCY^CODE'] == "B.F." or data['CURRENCY^CODE'] == "LIRA" or data['CURRENCY^CODE'] == "DMARK":
         data['CURRENCY^CODE'] = 'EUR'
 
-    elif data['CURRENCY^CODE'] == "PO":
-        data['CURRENCY^CODE'] = "GBP";
+    elif data['CURRENCY^CODE'] == "POUND" or data['CURRENCY^CODE'] == "POUNDS":
+        data['CURRENCY^CODE'] = 'GBP'
 
-    elif data['CURRENCY^CODE'] == "YE":
-        data['CURRENCY^CODE'] = "JPY";
+    elif data['CURRENCY^CODE'] == "SWFRA" or data['CURRENCY^CODE'] == "SWISSF":
+        data['CURRENCY^CODE'] = 'CHF'
 
-    elif data['CURRENCY^CODE'] == "CD":
-        data['CURRENCY^CODE'] = 'CAD'
+    elif data['CURRENCY^CODE'] == "KO":
+        data['CURRENCY^CODE'] = 'KRW'
 
     else:
         data['CURRENCY^CODE'] = 'USD'
