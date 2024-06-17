@@ -1766,7 +1766,8 @@ def import_accounts_receivable(data):
 
     if isset(data['ORDER^NUMBER']):
         transaction = get_object('transaction', 'legacy_transaction_number', data['ORDER^NUMBER'])
-        record['line_id'] = transaction['line_id']
+        if transaction is not None:
+            record['line_id'] = transaction['line_id']
 
     if invoice_match is not None:
         if amount > 0 or pattern_credit_memo.match(data['REFERENCE^NUMBER']) is not None:
