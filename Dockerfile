@@ -7,4 +7,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY import.py ./
 
-CMD [ "python", "./import.py" ]
+CMD [ "python", "import.py" ]
