@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import pymysql
-import configparser
+import os
 import pandas
 import math
 import os
@@ -14,32 +14,21 @@ from datetime import timedelta
 from dateutil.parser import parse
 from time import time
 
-config = configparser.ConfigParser()
-config.read('import.ini')
-
 print("Initailizing db...")
-if 'socket' in config['mysql']:
-    db = pymysql.connect(unix_socket=config['mysql']['socket'],
-                         user=config['mysql']['user'],
-                         password=config['mysql']['password'],
-                         db=config['mysql']['schema'],
-                         charset='utf8',
-                         cursorclass=pymysql.cursors.DictCursor)
-else:
-    db = pymysql.connect(host=config['mysql']['host'],
-                         user=config['mysql']['user'],
-                         password=config['mysql']['password'],
-                         db=config['mysql']['schema'],
-                         charset='utf8',
-                         cursorclass=pymysql.cursors.DictCursor)
+db = pymysql.connect(host=os.environ.get('MYSQL_HOST'),
+                     user=os.environ.get('MYSQL_USER'),
+                     password=os.environ.get('MYSQL_PASSWORD'),
+                     db=os.environ.get('MYSQL_SCHEMA'),
+                     charset='utf8',
+                     cursorclass=pymysql.cursors.DictCursor)
 cursor = db.cursor()
 
-data_directory = config['data']['directory'] + '/' + config['data']['version'] + '/'
+data_directory = '/data/'
 
-company = config['wd']['company_id']
-line = config['wd']['line_id']
-user = config['wd']['user_id']
-default_warehouse_code = config['default']['warehouse_code']
+company = os.environ.get('WD_COMPANY_ID')
+line = os.environ.get('WD_LINE_ID')
+user = os.environ.get('WD_USER_ID')
+default_warehouse_code = os.environ.get('DEFAULT_WAREHOUSE_CODE', 'WHS')
 now = date.today().isoformat()
 unknown_code_ids = {}
 get_ids = {}
@@ -1796,44 +1785,44 @@ def import_accounts_receivable(data):
 start_time = time()
 
 print("Deleting existing records...")
-if config['import'].getboolean('accounts_receivable'):
+if os.environ.get('IMPORT_ACCOUNTS_RECEIVABLE', 'false') == 'true':
     cursor.execute("delete from `payment` where `company_id` = %s", company)
     cursor.execute(
         "update `transaction` set `date_payment_completed` = `date_invoiced` where `company_id` = %s and status = 'S'",
         company)
 
-if config['import'].getboolean('shipped_transaction_notes'):
+if os.environ.get('IMPORT_SHIPPED_TRANSACTION_NOTES', 'false') == 'true':
     cursor.execute("delete from `note` where `company_id` = %s and `noteable_type` = 'Transaction'", company)
 
-if config['import'].getboolean('shipped_transaction_allocations'):
+if os.environ.get('IMPORT_SHIPPED_TRANSACTION_ALLOCATIONS', 'false') == 'true':
     cursor.execute(
         "delete `transaction_allocated_piece` from `transaction` inner join `transaction_item` on `transaction`.`id` = `transaction_item`.`transaction_id` inner join `transaction_allocated_piece` on `transaction_item`.`id` = `transaction_allocated_piece`.`transaction_item_id` where `transaction`.`company_id` = %s and `transaction`.`status` = 'S'",
         company)
-if config['import'].getboolean('shipped_transaction_detail'):
+if os.environ.get('IMPORT_SHIPPED_TRANSACTION_DETAIL', 'false') == 'true':
     cursor.execute(
         "delete `transaction_item` from `transaction` inner join `transaction_item` on `transaction`.`id` = `transaction_item`.`transaction_id` where `transaction`.`company_id` = %s and `transaction`.`status` = 'S'",
         company)
     cursor.execute(
         "delete `transaction_service` from `transaction` inner join `transaction_service` on `transaction`.`id` = `transaction_service`.`transaction_id` where `transaction`.`company_id` = %s and `transaction`.`status` = 'S'",
         company)
-if config['import'].getboolean('shipped_transactions'):
+if os.environ.get('IMPORT_SHIPPED_TRANSACTIONS', 'false') == 'true':
     cursor.execute(
         "delete `transaction_credit_memo` from `transaction` inner join `transaction_credit_memo` on `transaction`.`id` = `transaction_credit_memo`.`invoice_id` where `transaction`.`company_id` = %s and `transaction`.`status` = 'S'",
         company)
     cursor.execute("delete from `transaction` where `company_id` = %s and `status` = 'S'", company)
 
-if config['import'].getboolean('open_transaction_allocations'):
+if os.environ.get('IMPORT_OPEN_TRANSACTION_ALLOCATIONS', 'false') == 'true':
     cursor.execute(
         "delete `transaction_allocated_piece` from `transaction` inner join `transaction_item` on `transaction`.`id` = `transaction_item`.`transaction_id` inner join `transaction_allocated_piece` on `transaction_item`.`id` = `transaction_allocated_piece`.`transaction_item_id` where `transaction`.`company_id` = %s and `transaction`.`status` = 'O'",
         company)
-if config['import'].getboolean('open_transaction_detail'):
+if os.environ.get('IMPORT_OPEN_TRANSACTION_DETAIL', 'false') == 'true':
     cursor.execute(
         "delete `transaction_item` from `transaction` inner join `transaction_item` on `transaction`.`id` = `transaction_item`.`transaction_id` where `transaction`.`company_id` = %s and `transaction`.`status` = 'O'",
         company)
     cursor.execute(
         "delete `transaction_service` from `transaction` inner join `transaction_service` on `transaction`.`id` = `transaction_service`.`transaction_id` where `transaction`.`company_id` = %s and `transaction`.`status` = 'O'",
         company)
-if config['import'].getboolean('open_transactions'):
+if os.environ.get('IMPORT_OPEN_TRANSACTIONS', 'false') == 'true':
     cursor.execute("delete from `transaction` where `company_id` = %s and `status` = 'O'", company)
 
 cursor.execute(
@@ -1847,43 +1836,43 @@ cursor.execute(
     company)
 cursor.execute("delete from `transaction` where `company_id` = %s and `status` = 'C'", company)
 
-if config['import'].getboolean('purchase_order_notes'):
+if os.environ.get('IMPORT_PURCHASE_ORDER_NOTES', 'false') == 'true':
     cursor.execute(
         "update `purchase_order_item` inner join `purchase_order` on `purchase_order_item`.`purchase_order_id` = `purchase_order`.`id` set `purchase_order_item`.`internal_notes` = null where `purchase_order`.`company_id` = %s",
         company)
 
-if config['import'].getboolean('purchase_order_detail'):
+if os.environ.get('IMPORT_PURCHASE_ORDER_DETAIL', 'false') == 'true':
     cursor.execute(
         "delete `purchase_order_item` from `purchase_order` inner join `purchase_order_item` on `purchase_order`.`id` = `purchase_order_item`.`purchase_order_id` where `purchase_order`.`company_id` = %s",
         company)
 
-if config['import'].getboolean('purchase_orders'):
+if os.environ.get('IMPORT_PURCHASE_ORDERS', 'false') == 'true':
     cursor.execute("delete from `purchase_order` where `company_id` = %s", company)
 
-if config['import'].getboolean('inventory'):
+if os.environ.get('IMPORT_INVENTORY', 'false') == 'true':
     cursor.execute("delete from `inventory` where `company_id` = %s", company)
 
-if config['import'].getboolean('services'):
+if os.environ.get('IMPORT_SERVICES', 'false') == 'true':
     cursor.execute("delete from `service` where `company_id` = %s", company)
 
-if config['import'].getboolean('items'):
+if os.environ.get('IMPORT_ITEMS', 'false') == 'true':
     cursor.execute("delete from `item_inquiry` where `company_id` = %s", company)
     cursor.execute("delete from `item` where `company_id` = %s", company)
     cursor.execute("delete from `item_price` where `company_id` = %s and `priceable_type` = 'Item'", company)
 
-if config['import'].getboolean('styles'):
+if os.environ.get('IMPORT_STYLES', 'false') == 'true':
     cursor.execute(
         "delete `style`, `style_cost` from `style` left join `style_cost` on `style`.`id` = `style_cost`.`style_id` where `style`.`company_id` = %s",
         company)
     cursor.execute("delete from `item_price` where `company_id` = %s and `priceable_type` = 'Style'", company)
     cursor.execute("delete from `style_cost` where `style_id` not in (select `id` from `style`)")
 
-if config['import'].getboolean('vendor_employees'):
+if os.environ.get('IMPORT_VENDOR_EMPLOYEES', 'false') == 'true':
     cursor.execute(
         "delete `employee`, `email` from `vendor` inner join `employee` on `vendor`.`id` = `employee`.`employer_id` and `employee`.`employer_type` = 'Vendor' left join `email` on `employee`.`id` = `email`.`emailable_id` and `email`.`emailable_type` = 'Employee' where `vendor`.`company_id` = %s",
         company)
 
-if config['import'].getboolean('vendors'):
+if os.environ.get('IMPORT_VENDORS', 'false') == 'true':
     cursor.execute(
         "delete `address` from `address` inner join `vendor` on `address`.`addressable_id` = `vendor`.`id` and `address`.`addressable_type` = 'Vendor' where `vendor`.`company_id` = %s",
         (company))
@@ -1896,32 +1885,32 @@ if config['import'].getboolean('vendors'):
         "delete from `phone` where `phoneable_type` = 'Vendor' and `phoneable_id` not in (select `id` from `vendor`)")
     cursor.execute("delete from `vendor` where `company_id` = %s", company)
 
-if config['import'].getboolean('customer_resale'):
+if os.environ.get('IMPORT_CUSTOMER_RESALE', 'false') == 'true':
     cursor.execute(
         "delete `resale_certificate` from `resale_certificate` inner join `customer` on `resale_certificate`.`customer_id` = `customer`.`id` inner join `primary_address` on `resale_certificate`.`customer_id` = `primary_address`.`addressable_id` and `primary_address`.`addressable_type` = 'Customer' where `customer`.`company_id` = %s and (`resale_certificate`.`state_id` != `primary_address`.`state_id` or `resale_number` = 'On File')",
         company)
 
-if config['import'].getboolean('customer_ship_tos'):
+if os.environ.get('IMPORT_CUSTOMER_SHIP_TOS', 'false') == 'true':
     cursor.execute(
         "delete `ship_to`, `address` from `customer` inner join `ship_to` on `customer`.`id` = `ship_to`.`customer_id` left join `address` on `ship_to`.`id` = `address`.`addressable_id` and `address`.`addressable_type` = 'ShipTo' where `customer`.`company_id` = %s",
         company)
     cursor.execute(
         "delete from `address` where `addressable_type` = 'ShipTo' and `addressable_id` not in (select `id` from `ship_to`)")
 
-if config['import'].getboolean('customer_employees'):
+if os.environ.get('IMPORT_CUSTOMER_EMPLOYEES', 'false') == 'true':
     cursor.execute(
         "delete `employee`, `email`, `phone` from `customer` inner join `employee` on `customer`.`id` = `employee`.`employer_id` and `employee`.`employer_type` = 'Customer' left join `email` on `employee`.`id` = `email`.`emailable_id` and `email`.`emailable_type` = 'Employee' left join `phone` on `employee`.`id` = `phone`.`phoneable_id` and `phone`.`phoneable_type` = 'Employee' where `customer`.`company_id` = %s",
         company)
 
-if config['import'].getboolean('customer_ar_notes'):
+if os.environ.get('IMPORT_CUSTOMER_AR_NOTES', 'false') == 'true':
     cursor.execute("delete from `note` where `company_id` = %s and `noteable_type` = 'Customer' and `type` = 'A/R'",
                    company)
 
-if config['import'].getboolean('customer_notes'):
+if os.environ.get('IMPORT_CUSTOMER_NOTES', 'false') == 'true':
     cursor.execute("delete from `note` where `company_id` = %s and `noteable_type` = 'Customer' and `type` is null",
                    company)
 
-if config['import'].getboolean('customers'):
+if os.environ.get('IMPORT_CUSTOMERS', 'false') == 'true':
     cursor.execute(
         "delete `address` from `address` inner join `customer` on `address`.`addressable_id` = `customer`.`id` and `address`.`addressable_type` = 'Customer' where `customer`.`company_id` = %s",
         (company))
@@ -1934,12 +1923,12 @@ if config['import'].getboolean('customers'):
         "delete from `phone` where `phoneable_type` = 'Customer' and `phoneable_id` not in (select `id` from `customer`)")
     cursor.execute("delete from `customer` where `company_id` = %s", company)
 
-if config['import'].getboolean('rep_employees'):
+if os.environ.get('IMPORT_REP_EMPLOYEES', 'false') == 'true':
     cursor.execute(
         "delete `employee`, `email`, `phone` from `rep` inner join `employee` on `rep`.`id` = `employee`.`employer_id` and `employee`.`employer_type` = 'Rep' left join `email` on `employee`.`id` = `email`.`emailable_id` and `email`.`emailable_type` = 'Employee' left join `phone` on `employee`.`id` = `phone`.`phoneable_id` and `phone`.`phoneable_type` = 'Employee' where `rep`.`company_id` = %s",
         company)
 
-if config['import'].getboolean('reps'):
+if os.environ.get('IMPORT_REPS', 'false') == 'true':
     cursor.execute("delete from `rep_discount_commission` where `company_id` = %s", company)
     cursor.execute(
         "delete `address` from `address` inner join `rep` on `address`.`addressable_id` = `rep`.`id` and `address`.`addressable_type` = 'Rep' where `rep`.`company_id` = %s",
@@ -1953,10 +1942,10 @@ if config['import'].getboolean('reps'):
         "delete from `phone` where `phoneable_type` = 'Rep' and `phoneable_id` not in (select `id` from `rep`)")
     cursor.execute("delete from `rep` where `company_id` = %s", company)
 
-if config['import'].getboolean('warehouses'):
+if os.environ.get('IMPORT_WAREHOUSES', 'false') == 'true':
     cursor.execute("delete from `warehouse` where `company_id` = %s", company)
 
-if config['import'].getboolean('codes'):
+if os.environ.get('IMPORT_CODES', 'false') == 'true':
     cursor.execute("delete from `code` where `editable` = 1 and `company_id` = %s", company)
     cursor.execute("delete from `carrier` where `company_id` = %s", company)
     cursor.execute("delete from `shipping_service` where `company_id` = %s", company)
@@ -2000,7 +1989,7 @@ pattern_ar_invoice = re.compile(r"^(DI|[DC]M)\s([\d]{6})")
 pattern_ar_payment = re.compile(r"^CP\s([\d]{6})")
 pattern_valid_unit = re.compile(r"^[a-z]", re.IGNORECASE)
 
-if config['import'].getboolean('codes'):
+if os.environ.get('IMPORT_CODES', 'false') == 'true':
     print("Importing codes...")
     codes = get_iterator(data_directory + 'MISCCODE.TXT')
     for index, code in codes:
@@ -2020,7 +2009,7 @@ if config['import'].getboolean('codes'):
 carrier_def_id = get_column('company_default', 'customer_carrier_id', 'company_id', company)
 shipping_service_def_id = get_column('company_default', 'customer_shipping_service_id', 'company_id', company)
 
-if config['import'].getboolean('warehouses'):
+if os.environ.get('IMPORT_WAREHOUSES', 'false') == 'true':
     print("Importing warehouses...")
     warehouses = get_iterator(data_directory + 'MISCCODE.TXT')
     for index, warehouse in warehouses:
@@ -2032,7 +2021,7 @@ if config['import'].getboolean('warehouses'):
     db.commit()
 warehouse_def_id = get_column('line', 'default_warehouse_id', 'id', line)
 
-if config['import'].getboolean('vendors'):
+if os.environ.get('IMPORT_VENDORS', 'false') == 'true':
     print("Importing vendors...")
     vendors = get_iterator(data_directory + 'VENDOR.TXT')
     for index, vendor in vendors:
@@ -2050,7 +2039,7 @@ if config['import'].getboolean('vendors'):
 else:
     unknown_vendor = get_object('vendor', 'legacy_vendor_code', 'UNK')
 
-if config['import'].getboolean('vendor_employees'):
+if os.environ.get('IMPORT_VENDOR_EMPLOYEES', 'false') == 'true':
     print("Importing vendor employees...")
     employees = get_iterator(data_directory + 'VENDEML.TXT')
     for index, employee in employees:
@@ -2059,7 +2048,7 @@ if config['import'].getboolean('vendor_employees'):
             db.commit()
     db.commit()
 
-if config['import'].getboolean('reps'):
+if os.environ.get('IMPORT_REPS', 'false') == 'true':
     print("Importing reps...")
     reps = get_iterator(data_directory + 'SALESREP.TXT')
     for index, rep in reps:
@@ -2072,7 +2061,7 @@ if config['import'].getboolean('reps'):
 else:
     unknown_rep = get_object('rep', 'rep_code', 'UNK')
 
-if config['import'].getboolean('rep_employees'):
+if os.environ.get('IMPORT_REP_EMPLOYEES', 'false') == 'true':
     print("Importing rep employees...")
     employees = get_iterator(data_directory + 'REPEML.TXT')
     for index, employee in employees:
@@ -2081,7 +2070,7 @@ if config['import'].getboolean('rep_employees'):
             db.commit()
     db.commit()
 
-if config['import'].getboolean('customers'):
+if os.environ.get('IMPORT_CUSTOMERS', 'false') == 'true':
     print("Importing customers...")
     customers = get_iterator(data_directory + 'CUSTOMER.TXT')
     for index, customer in customers:
@@ -2090,7 +2079,7 @@ if config['import'].getboolean('customers'):
             db.commit()
     db.commit()
 
-if config['import'].getboolean('customer_notes'):
+if os.environ.get('IMPORT_CUSTOMER_NOTES', 'false') == 'true':
     print("Importing customer notes...")
     notes = get_iterator(data_directory + 'CUSNOTES.TXT')
     for index, note in notes:
@@ -2099,7 +2088,7 @@ if config['import'].getboolean('customer_notes'):
             db.commit()
     db.commit()
 
-if config['import'].getboolean('customer_ar_notes'):
+if os.environ.get('IMPORT_CUSTOMER_AR_NOTES', 'false') == 'true':
     print("Importing customer A/R notes...")
     notes = get_iterator(data_directory + 'ARNOTES.TXT')
     for index, note in notes:
@@ -2108,7 +2097,7 @@ if config['import'].getboolean('customer_ar_notes'):
             db.commit()
     db.commit()
 
-if config['import'].getboolean('customer_employees'):
+if os.environ.get('IMPORT_CUSTOMER_EMPLOYEES', 'false') == 'true':
     print("Importing customer employees...")
     employees = get_iterator(data_directory + 'CUSTEML.TXT')
     for index, employee in employees:
@@ -2117,7 +2106,7 @@ if config['import'].getboolean('customer_employees'):
             db.commit()
     db.commit()
 
-if config['import'].getboolean('customer_ship_tos'):
+if os.environ.get('IMPORT_CUSTOMER_SHIP_TOS', 'false') == 'true':
     print("Importing customer ship to addresses...")
     addresses = get_iterator(data_directory + 'CUSTSHTO.TXT')
     for index, address in addresses:
@@ -2126,7 +2115,7 @@ if config['import'].getboolean('customer_ship_tos'):
             db.commit()
     db.commit()
 
-if config['import'].getboolean('customer_resale'):
+if os.environ.get('IMPORT_CUSTOMER_RESALE', 'false') == 'true':
     print("Importing customer out-of-state resale certificates...")
     records = get_iterator(data_directory + 'RESALNO.TXT')
     for index, record in records:
@@ -2135,7 +2124,7 @@ if config['import'].getboolean('customer_resale'):
             db.commit()
     db.commit()
 
-if config['import'].getboolean('styles'):
+if os.environ.get('IMPORT_STYLES', 'false') == 'true':
     print("Importing styles...")
     styles = get_iterator(data_directory + 'PATTERN.TXT', 0, 0)
     for index, style in styles:
@@ -2161,7 +2150,7 @@ if config['import'].getboolean('styles'):
 else:
     unknown_style = get_object('style', 'legacy_style_number', 'UNK')
 
-if config['import'].getboolean('items'):
+if os.environ.get('IMPORT_ITEMS', 'false') == 'true':
     print("Importing items...")
     items = get_iterator(data_directory + 'COLOR.TXT')
     for index, item in items:
@@ -2169,14 +2158,14 @@ if config['import'].getboolean('items'):
         if index % 500 == 0:
             db.commit()
 
-if config['import'].getboolean('services'):
+if os.environ.get('IMPORT_SERVICES', 'false') == 'true':
     print("Importing services...")
     services = get_iterator(data_directory + 'SERVICES.TXT')
     for index, service in services:
         import_service(service)
     db.commit()
 
-if config['import'].getboolean('inventory'):
+if os.environ.get('IMPORT_INVENTORY', 'false') == 'true':
     print("Importing inventory...")
     records = get_iterator(data_directory + 'LOTPCE.TXT')
     for index, record in records:
@@ -2194,7 +2183,7 @@ if config['import'].getboolean('inventory'):
         company)
     db.commit()
 
-if config['import'].getboolean('purchase_orders'):
+if os.environ.get('IMPORT_PURCHASE_ORDERS', 'false') == 'true':
     print("Importing purchase orders...")
     purchase_orders = get_iterator(data_directory + 'MILLPOH.TXT')
     for index, purchase_order in purchase_orders:
@@ -2202,7 +2191,7 @@ if config['import'].getboolean('purchase_orders'):
         if index % 500 == 0:
             db.commit()
     db.commit()
-if config['import'].getboolean('purchase_order_detail'):
+if os.environ.get('IMPORT_PURCHASE_ORDER_DETAIL', 'false') == 'true':
     print("Importing purchase order items...")
     rows = get_iterator(data_directory + 'MILLPOD.TXT')
     for index, row in rows:
@@ -2210,7 +2199,7 @@ if config['import'].getboolean('purchase_order_detail'):
         if index % 500 == 0:
             db.commit()
     db.commit()
-if config['import'].getboolean('purchase_order_notes'):
+if os.environ.get('IMPORT_PURCHASE_ORDER_NOTES', 'false') == 'true':
     print("Importing purchase order notes...")
     rows = get_iterator(data_directory + 'POINOTES.TXT')
     for index, row in rows:
@@ -2220,7 +2209,7 @@ if config['import'].getboolean('purchase_order_notes'):
     db.commit()
 
 # Transactions
-if config['import'].getboolean('open_transactions'):
+if os.environ.get('IMPORT_OPEN_TRANSACTIONS', 'false') == 'true':
     print("Importing open transactions...")
     transactions = get_iterator(data_directory + 'ORDOPNH.TXT')
     for index, transaction in transactions:
@@ -2228,7 +2217,7 @@ if config['import'].getboolean('open_transactions'):
         if index % 500 == 0:
             db.commit()
     db.commit()
-if config['import'].getboolean('shipped_transactions'):
+if os.environ.get('IMPORT_SHIPPED_TRANSACTIONS', 'false') == 'true':
     print("Importing shipped transactions...")
     transactions = get_iterator(data_directory + 'ORDSHPH.TXT')
     for index, transaction in transactions:
@@ -2238,7 +2227,7 @@ if config['import'].getboolean('shipped_transactions'):
     db.commit()
 
 # Transaction Services
-if config['import'].getboolean('open_transaction_detail'):
+if os.environ.get('IMPORT_OPEN_TRANSACTION_DETAIL', 'false') == 'true':
     print("Importing open transaction services...")
     rows = get_iterator(data_directory + 'OPENOSRV.TXT')
     for index, row in rows:
@@ -2246,7 +2235,7 @@ if config['import'].getboolean('open_transaction_detail'):
         if index % 2000 == 0:
             db.commit()
     db.commit()
-if config['import'].getboolean('shipped_transaction_detail'):
+if os.environ.get('IMPORT_SHIPPED_TRANSACTION_DETAIL', 'false') == 'true':
     print("Importing shipped transaction services...")
     rows = get_iterator(data_directory + 'SHIPOSRV.TXT')
     for index, row in rows:
@@ -2256,7 +2245,7 @@ if config['import'].getboolean('shipped_transaction_detail'):
     db.commit()
 
 # Transaction Items
-if config['import'].getboolean('open_transaction_detail'):
+if os.environ.get('IMPORT_OPEN_TRANSACTION_DETAIL', 'false') == 'true':
     print("Importing open transaction items...")
     rows = get_iterator(data_directory + 'ORDOPND.TXT')
     for index, row in rows:
@@ -2264,7 +2253,7 @@ if config['import'].getboolean('open_transaction_detail'):
         if index % 2000 == 0:
             db.commit()
     db.commit()
-if config['import'].getboolean('shipped_transaction_detail'):
+if os.environ.get('IMPORT_SHIPPED_TRANSACTION_DETAIL', 'false') == 'true':
     print("Importing shipped transaction items...")
     rows = get_iterator(data_directory + 'ORDSHPD.TXT')
     for index, row in rows:
@@ -2274,7 +2263,7 @@ if config['import'].getboolean('shipped_transaction_detail'):
     db.commit()
 
 # Transaction Allocations
-if config['import'].getboolean('open_transaction_allocations'):
+if os.environ.get('IMPORT_OPEN_TRANSACTION_ALLOCATIONS', 'false') == 'true':
     print("Importing open transaction allocations...")
     rows = get_iterator(data_directory + 'PCECMTD.TXT')
     for index, row in rows:
@@ -2283,7 +2272,7 @@ if config['import'].getboolean('open_transaction_allocations'):
             db.commit()
     db.commit()
 
-if config['import'].getboolean('shipped_transaction_allocations'):
+if os.environ.get('IMPORT_SHIPPED_TRANSACTION_ALLOCATIONS', 'false') == 'true':
     print("Importing shipped transaction allocations...")
     rows = get_iterator(data_directory + 'PCESHIP.TXT')
     for index, row in rows:
@@ -2293,7 +2282,7 @@ if config['import'].getboolean('shipped_transaction_allocations'):
     db.commit()
 
 # Transaction Messages
-if config['import'].getboolean('open_transaction_messages'):
+if os.environ.get('IMPORT_OPEN_TRANSACTION_MESSAGES', 'false') == 'true':
     print("Importing open transaction messages...")
     rows = get_iterator(data_directory + 'OPENORDZ.TXT')
     for index, row in rows:
@@ -2301,7 +2290,7 @@ if config['import'].getboolean('open_transaction_messages'):
         if index % 500 == 0:
             db.commit()
     db.commit()
-if config['import'].getboolean('shipped_transaction_messages'):
+if os.environ.get('IMPORT_SHIPPED_TRANSACTION_MESSAGES', 'false') == 'true':
     print("Importing shipped transaction messages...")
     rows = get_iterator(data_directory + 'SHIPORDZ.TXT')
     for index, row in rows:
@@ -2311,7 +2300,7 @@ if config['import'].getboolean('shipped_transaction_messages'):
     db.commit()
 
 # Transaction Notes
-if config['import'].getboolean('shipped_transaction_notes'):
+if os.environ.get('IMPORT_SHIPPED_TRANSACTION_NOTES', 'false') == 'true':
     print("Importing shipped transaction notes...")
     rows = get_iterator(data_directory + 'ORDNOTES.TXT', None)
     for index, row in rows:
@@ -2320,7 +2309,7 @@ if config['import'].getboolean('shipped_transaction_notes'):
             db.commit()
     db.commit()
 
-if config['import'].getboolean('open_transactions') or config['import'].getboolean('shipped_transactions'):
+if os.environ.get('IMPORT_OPEN_TRANSACTIONS', 'false') == 'true' or os.environ.get('IMPORT_SHIPPED_TRANSACTIONS', 'false') == 'true':
     print("Finalizing imported transactions...")
     cursor.execute(
         "update `transaction` inner join `customer` on `transaction`.`customer_id` = `customer`.`id` set `transaction`.`sale_type_id` = `customer`.`type_id` where `transaction`.`company_id` = %s and `transaction`.`sale_type_id` is null",
@@ -2344,7 +2333,7 @@ if config['import'].getboolean('open_transactions') or config['import'].getboole
         "update `code` set `h_hold_type` = 'G' where `h_hold_type` is null and `company_id` = %s and `type_id` = 10",
         (company))
 
-if config['import'].getboolean('accounts_receivable'):
+if os.environ.get('IMPORT_ACCOUNTS_RECEIVABLE', 'false') == 'true':
     print("Importing accounts receivable...")
     rows = get_iterator(data_directory + 'AROPEN.TXT')
     for index, row in rows:
