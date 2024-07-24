@@ -12,7 +12,7 @@ from datetime import timedelta
 from dateutil.parser import parse
 from time import time
 
-print("Initailizing db...")
+print("Initializing db...")
 db = pymysql.connect(host=os.environ.get('MYSQL_HOST'),
                      user=os.environ.get('MYSQL_USER'),
                      password=os.environ.get('MYSQL_PASSWORD'),
