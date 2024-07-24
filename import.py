@@ -48,14 +48,7 @@ mill_unit_ids = {}
 
 
 def get_line_id(line_code: str) -> int:
-    if line_code == 'CS':
-        return 91
-    elif line_code == 'HC':
-        return 92
-    elif line_code == 'DK':
-        return 93
-    else:
-        return 90
+    return get_id('line', 'legacy_line_code', line_code) or 90
 
 
 def insert_object(table, object, catch=False):
