@@ -4,9 +4,7 @@ import pymysql
 import configparser
 import pandas
 import math
-import os
 import re
-import sys
 import uuid
 from datetime import date
 from datetime import datetime
