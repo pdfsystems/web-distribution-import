@@ -1739,23 +1739,26 @@ def import_accounts_receivable(data):
         transaction = get_object('transaction', 'legacy_transaction_number', data['ORDER^NUMBER'])
 
     if invoice_match is not None:
-        if amount > 0 or pattern_credit_memo.match(data['REFERENCE^NUMBER']) is not None:
-            cursor.execute("update `transaction` set `date_payment_completed` = null where `id` = %s",
-                           transaction['id'])
-            return
+        if transaction is not None:
+            if amount > 0 or pattern_credit_memo.match(data['REFERENCE^NUMBER']) is not None:
+                cursor.execute("update `transaction` set `date_payment_completed` = null where `id` = %s",
+                               transaction['id'])
+                return
 
-        record['payment_number'] = next_sequential_number('payment_number')
-        payment_id = insert_object('payment', record)
+            record['payment_number'] = next_sequential_number('payment_number')
+            payment_id = insert_object('payment', record)
 
-        payment_detail = {
-            'amount_applied': abs(amount),
-            'created_at': now,
-            'payment_id': payment_id,
-            'transaction_id': transaction['id'],
-            'updated_at': now,
-        }
+            payment_detail = {
+                'amount_applied': abs(amount),
+                'created_at': now,
+                'payment_id': payment_id,
+                'transaction_id': transaction['id'],
+                'updated_at': now,
+            }
 
-        insert_object('payment_detail', payment_detail)
+            insert_object('payment_detail', payment_detail)
+        else:
+            print(f"Skipping A/R record for missing transaction #{data['ORDER^NUMBER']}")
 
     elif payment_match is not None:
         if amount > 0:
