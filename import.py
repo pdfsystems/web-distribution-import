@@ -1225,7 +1225,10 @@ def import_purchase_order(data):
         'warehouse_id': warehouse_def_id
     }
 
-    insert_object('purchase_order', purchase_order)
+    try:
+        insert_object('purchase_order', purchase_order)
+    except pymysql.err.DatabaseError as e:
+        print(f"Unable to import purchase order {data['P.O. #']}: {e}")
 
 
 def import_purchase_order_item(data):
