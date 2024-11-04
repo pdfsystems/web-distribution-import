@@ -1185,7 +1185,7 @@ def import_inventory(data):
 
     try:
         insert_object('inventory', inventory)
-    except pymysql.err.InternalError as e:
+    except pymysql.err.DatabaseError as e:
         print(f"Unable to import piece for {data['ITEM #']}/{data['LOT #']}/{data['PCE']}: {e}")
 
 
