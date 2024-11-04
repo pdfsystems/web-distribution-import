@@ -932,8 +932,6 @@ def import_style(data):
             style['selling_unit_id'] = code_yard_id
         elif data['UNIT^OF^MEASURE'][0] == 'M':
             style['selling_unit_id'] = code_meter_id
-        elif data['UNIT^OF^MEASURE'][0] == 'R':
-            style['selling_unit_id'] = code_roll_id
         elif data['UNIT^OF^MEASURE'].strip() == 'EACH':
             style['selling_unit_id'] = code_each_id
         elif pattern_valid_unit.match(data['UNIT^OF^MEASURE']):
@@ -948,8 +946,6 @@ def import_style(data):
             style['mill_unit_id'] = code_yard_id
         elif data['MILLS^UNIT OF^MEAS'][0] == 'M':
             style['mill_unit_id'] = code_meter_id
-        elif data['MILLS^UNIT OF^MEAS'][0] == 'R':
-            style['mill_unit_id'] = code_roll_id
         elif data['MILLS^UNIT OF^MEAS'].strip() == 'EACH':
             style['mill_unit_id'] = code_each_id
         elif pattern_valid_unit.match(data['MILLS^UNIT OF^MEAS']):
