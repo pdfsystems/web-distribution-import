@@ -297,7 +297,7 @@ def insert_address(source_id, source_type, street, city, country_id, name='Prima
 
 
 def insert_phone(source_id, source_type, country_id, phone_number, primary=True):
-    phone_number = re.sub(r'[^\d]', '', phone_number)
+    phone_number = re.sub(r'[^\d]', '', str(phone_number))
 
     phone = {
         'country_id': country_id,
