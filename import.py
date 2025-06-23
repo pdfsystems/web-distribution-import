@@ -906,7 +906,7 @@ def import_style(data):
         'lead_time': data['LEAD^TIME'] * 7,
         'legacy_style_number': data['PATTERN^NUMBER'],
         'line_id': line,
-        'minimum_order_quantity': data['MILLS^MINIMUM^ORDER'],
+        'minimum_order_quantity': max(data['MILLS^MINIMUM^ORDER'], 1),
         'misc_cost': data['MISC^COST'],
         'name': data['PATTERN NAME'],
         'origin_country': data['COUNTRY^OF ORIGIN'],
@@ -921,7 +921,7 @@ def import_style(data):
         'width': data['WIDTH'],
     }
 
-    style['standard_quantity'] = max(style['minimum_order_quantity'], 1)
+    style['standard_quantity'] = style['minimum_order_quantity']
     style['shipping_weight'] = style['weight']
 
     if isempty(style['name']):
