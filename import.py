@@ -8,6 +8,7 @@ import os
 import re
 import sys
 import uuid
+import csv
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
@@ -340,6 +341,7 @@ def import_code(data):
         'updated_at': now,
     }
 
+
     if data['TYPE'] == 'P':
         code['type_id'] = 1
     elif data['TYPE'] == 'C':
@@ -378,6 +380,36 @@ def import_code(data):
     except pymysql.err.IntegrityError:
         print(f"Duplicate code ({data['TYPE']}/{data['CODE']})")
 
+
+def import_web_code(data):
+    code = {
+        'company_id': company,
+        'name': data['DESCRIPTION'],
+        'abbreviation': data['CODE'],
+        'created_at': now,
+        'updated_at': now,
+    }
+
+    if isempty(code['name']):
+        code['name'] = code['abbreviation']
+
+    if data['TYPE'] == 'C':
+        code['type_id'] = 14
+    elif data['TYPE'] == 'D':
+        code['type_id'] = 17
+    elif data['TYPE'] == 'M':
+        code['type_id'] = 6
+    elif data['TYPE'] == 'O':
+        code['type_id'] = 4
+    elif data['TYPE'] == 'P':
+        code['type_id'] = 3
+    else:
+        return
+
+    try:
+        insert_object('code', code)
+    except pymysql.err.IntegrityError:
+        print(f"Duplicate web code ({data['TYPE']}/{data['CODE']})")
 
 def import_warehouse(data):
     return insert_object('warehouse', {
@@ -958,6 +990,30 @@ def import_style(data):
     if isset(data['VENDOR^CODE']):
         style['vendor_id'] = get_id('vendor', 'legacy_vendor_code', data['VENDOR^CODE'])
 
+    if isset(data['CATEGORY^CODE']):
+        try:
+            style['product_type_code_id'] = get_code_id(3, int(data['CATEGORY^CODE']))
+        except ValueError:
+            pass
+
+    if isset(data['DESIGN^CODE']):
+        try:
+            style['product_design_code_id'] = get_code_id(17,int( data['DESIGN^CODE']))
+        except ValueError:
+            pass
+
+    if isset(data['CONTENT^CODE']):
+        try:
+            style['content_code_id'] = get_code_id(4, int(data['CONTENT^CODE']))
+        except ValueError:
+            pass
+
+    if isset(data['MISC^CODE']):
+        try:
+            style['misc_code_id'] = get_code_id(6, int(data['MISC^CODE']))
+        except ValueError:
+            pass
+
     if 'vendor_id' not in style or isempty(style['vendor_id']):
         style['vendor_id'] = unknown_vendor['id']
 
@@ -1111,6 +1167,18 @@ def import_item(data):
     if data['COLOR COMMENT 1'] == '***' and 'date_discontinued' not in item:
         item['limited_stock_date'] = now
         item['comment'] = data['COLOR COMMENT 2']
+
+    if isset(data['PRIMARY^COLOR CODE']):
+        try:
+            item['primary_color_code_id'] = get_code_id(14, int(data['PRIMARY^COLOR CODE']))
+        except ValueError:
+            pass
+
+    if isset(data['SECONDARY^COLOR CODE']):
+        try:
+            item['secondary_color_code_id'] = get_code_id(14, int(data['SECONDARY^COLOR CODE']))
+        except ValueError:
+            pass
 
     try:
         item_id = insert_object('item', item)
@@ -2010,6 +2078,14 @@ if os.environ.get('IMPORT_CODES', 'false') == 'true':
                    (code_standard_package_id, company))
 carrier_def_id = get_column('company_default', 'customer_carrier_id', 'company_id', company)
 shipping_service_def_id = get_column('company_default', 'customer_shipping_service_id', 'company_id', company)
+
+if os.environ.get('IMPORT_WEB_CODES', 'false') == 'true':
+    print("Importing web codes...")
+    # TODO: The filename here will very likely change
+    codes = get_iterator(data_directory + 'TLFM1CW.TXT', quoting=csv.QUOTE_MINIMAL)
+    for index, code in codes:
+        import_web_code(code)
+    db.commit()
 
 if os.environ.get('IMPORT_WAREHOUSES', 'false') == 'true':
     print("Importing warehouses...")
