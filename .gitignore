@@ -1,5 +1,3 @@
-import.ini
 sftp-config.json
-import.ini.*
 .env
-.idea/dataSources.xml
+.idea

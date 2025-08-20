@@ -20,6 +20,7 @@ db = pymysql.connect(host=os.environ.get('MYSQL_HOST'),
                      user=os.environ.get('MYSQL_USER'),
                      password=os.environ.get('MYSQL_PASSWORD'),
                      db=os.environ.get('MYSQL_SCHEMA'),
+                     port=int(os.environ.get('MYSQL_PORT', 3306)),
                      charset='utf8',
                      cursorclass=pymysql.cursors.DictCursor)
 cursor = db.cursor()
