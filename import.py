@@ -2082,8 +2082,7 @@ shipping_service_def_id = get_column('company_default', 'customer_shipping_servi
 
 if os.environ.get('IMPORT_WEB_CODES', 'false') == 'true':
     print("Importing web codes...")
-    # TODO: The filename here will very likely change
-    codes = get_iterator(data_directory + 'TLFM1CW.TXT', quoting=csv.QUOTE_MINIMAL)
+    codes = get_iterator(data_directory + 'WEBCODE.TXT', quoting=csv.QUOTE_MINIMAL)
     for index, code in codes:
         import_web_code(code)
     db.commit()
