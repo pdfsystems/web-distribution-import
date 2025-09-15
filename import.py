@@ -993,25 +993,25 @@ def import_style(data):
 
     if isset(data['CATEGORY^CODE']):
         try:
-            style['product_type_code_id'] = get_code_id(3, int(data['CATEGORY^CODE']))
+            style['product_type_code_id'] = get_code_id(3, data['CATEGORY^CODE'])
         except ValueError:
             pass
 
     if isset(data['DESIGN^CODE']):
         try:
-            style['product_design_code_id'] = get_code_id(17,int( data['DESIGN^CODE']))
+            style['product_design_code_id'] = get_code_id(17, data['DESIGN^CODE'])
         except ValueError:
             pass
 
     if isset(data['CONTENT^CODE']):
         try:
-            style['content_code_id'] = get_code_id(4, int(data['CONTENT^CODE']))
+            style['content_code_id'] = get_code_id(4, data['CONTENT^CODE'])
         except ValueError:
             pass
 
     if isset(data['MISC^CODE']):
         try:
-            style['misc_code_id'] = get_code_id(6, int(data['MISC^CODE']))
+            style['misc_code_id'] = get_code_id(6, data['MISC^CODE'])
         except ValueError:
             pass
 
@@ -1171,13 +1171,13 @@ def import_item(data):
 
     if isset(data['PRIMARY^COLOR CODE']):
         try:
-            item['primary_color_code_id'] = get_code_id(14, int(data['PRIMARY^COLOR CODE']))
+            item['primary_color_code_id'] = get_code_id(14, data['PRIMARY^COLOR CODE'])
         except ValueError:
             pass
 
     if isset(data['SECONDARY^COLOR CODE']):
         try:
-            item['secondary_color_code_id'] = get_code_id(14, int(data['SECONDARY^COLOR CODE']))
+            item['secondary_color_code_id'] = get_code_id(14, data['SECONDARY^COLOR CODE'])
         except ValueError:
             pass
 
