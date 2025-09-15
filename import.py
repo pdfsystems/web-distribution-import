@@ -394,15 +394,15 @@ def import_web_code(data):
     if isempty(code['name']):
         code['name'] = code['abbreviation']
 
-    if data['TYPE'] == 'C':
+    if data['CODE'][0] == 'C':
         code['type_id'] = 14
-    elif data['TYPE'] == 'D':
+    elif data['CODE'][0] == 'D':
         code['type_id'] = 17
-    elif data['TYPE'] == 'M':
+    elif data['CODE'][0] == 'M':
         code['type_id'] = 6
-    elif data['TYPE'] == 'O':
+    elif data['CODE'][0] == 'O':
         code['type_id'] = 4
-    elif data['TYPE'] == 'P':
+    elif data['CODE'][0] == 'P':
         code['type_id'] = 3
     else:
         return
@@ -410,7 +410,7 @@ def import_web_code(data):
     try:
         insert_object('code', code)
     except pymysql.err.IntegrityError:
-        print(f"Duplicate web code ({data['TYPE']}/{data['CODE']})")
+        print(f"Duplicate web code ({data['CODE']}/{data['DESCRIPTION']})")
 
 def import_warehouse(data):
     return insert_object('warehouse', {
