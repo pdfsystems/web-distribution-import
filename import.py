@@ -1181,6 +1181,9 @@ def import_item(data):
         except ValueError:
             pass
 
+    if isset(data['COLOR^COST']):
+        item['cost'] = data['COLOR^COST']
+
     try:
         item_id = insert_object('item', item)
     except pymysql.err.IntegrityError:
