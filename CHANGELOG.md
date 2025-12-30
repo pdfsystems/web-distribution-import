@@ -2,6 +2,10 @@
 
 All notable changes to `pdfsystems/web-distribution-import` will be documented in this file.
 
+## 1.2.0 - 2025-12-30
+
+Added support for importing item-specific costs
+
 ## 1.1.2 - 2025-09-15
 
 Do not cast web codes to integers
