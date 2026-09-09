@@ -920,7 +920,8 @@ def import_style(data):
         'royalty_percent': data['ROYALTY^RATE'] / 100,
         'tests': combine(data, ('TEST 1', 'TEST 2'), "\n"),
         'updated_at': now,
-        'weight': int(data['WEIGHT^POUNDS']) * 16 + int(data['WEIGHT^OUNCES']),
+        'weight': int(data['ACTUAL WT^POUNDS']) * 16 + int(data['ACTUAL WT^OUNCES']),
+        'shipping_weight': int(data['WEIGHT^POUNDS']) * 16 + int(data['WEIGHT^OUNCES']),
         'width': data['WIDTH'],
     }
 
@@ -928,7 +929,6 @@ def import_style(data):
         style['lead_time'] = None
 
     style['standard_quantity'] = max(style['minimum_order_quantity'], 1)
-    style['shipping_weight'] = style['weight']
 
     if isempty(style['name']):
         style['name'] = data['PATTERN^NUMBER']
