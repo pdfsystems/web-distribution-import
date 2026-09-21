@@ -346,6 +346,8 @@ def import_code(data):
 
     if data['TYPE'] == 'P':
         code['type_id'] = 1
+        if isset(data['UNUSED']):
+            code['pc_subtype'] = data['UNUSED']
     elif data['TYPE'] == 'C':
         code['type_id'] = 21
     elif data['TYPE'] == 'R':
