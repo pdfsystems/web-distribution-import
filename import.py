@@ -967,6 +967,8 @@ def import_style(data):
             style['selling_unit_id'] = code_meter_id
         elif data['UNIT^OF^MEASURE'].strip() == 'EACH':
             style['selling_unit_id'] = code_each_id
+        elif data['UNIT^OF^MEASURE'].strip() == 'ROLLS' or data['UNIT^OF^MEASURE'].strip() == 'ROLL':
+            style['selling_unit_id'] = code_roll_id
         elif pattern_valid_unit.match(data['UNIT^OF^MEASURE']):
             # In the future, this should be modified to automatically create the unit of measure
             pass
@@ -981,6 +983,8 @@ def import_style(data):
             style['mill_unit_id'] = code_meter_id
         elif data['MILLS^UNIT OF^MEAS'].strip() == 'EACH':
             style['mill_unit_id'] = code_each_id
+        elif data['MILLS^UNIT OF^MEAS'].strip() == 'ROLLS' or data['MILLS^UNIT OF^MEAS'].strip() == 'ROLL':
+            style['mill_unit_id'] = code_roll_id
         elif pattern_valid_unit.match(data['MILLS^UNIT OF^MEAS']):
             # In the future, this should be modified to automatically create the unit of measure
             pass
@@ -2048,6 +2052,7 @@ code_unknown_payment_id = get_unknown_code(8)
 code_yard_id = get_code_id(15, 'Yard')
 code_meter_id = get_code_id(15, 'Meter')
 code_each_id = get_code_id(15, 'Each')
+code_roll_id = get_code_id(15, 'Rolls')
 code_discontinued_id = get_code_id(7, 'Discontinued')
 code_standard_package_id = create_code_id('STD', 20, 'Standard')
 
