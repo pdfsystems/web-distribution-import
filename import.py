@@ -1181,7 +1181,7 @@ def import_item(data):
         except ValueError:
             pass
 
-    if isset(data['COLOR^COST']):
+    if 'COLOR^COST' in data and isset(data['COLOR^COST']):
         item['cost'] = data['COLOR^COST']
 
     try:
