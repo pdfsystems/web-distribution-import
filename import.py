@@ -386,7 +386,7 @@ def import_web_code(data):
     code = {
         'company_id': company,
         'name': data['DESCRIPTION'],
-        'abbreviation': data['CODE'],
+        'abbreviation': f"{data['TYPE']}{data['CODE']}",
         'created_at': now,
         'updated_at': now,
     }
@@ -394,15 +394,15 @@ def import_web_code(data):
     if isempty(code['name']):
         code['name'] = code['abbreviation']
 
-    if data['CODE'][0] == 'C':
+    if data['TYPE'] == 'C':
         code['type_id'] = 14
-    elif data['CODE'][0] == 'D':
+    elif data['TYPE'] == 'D':
         code['type_id'] = 17
-    elif data['CODE'][0] == 'M':
+    elif data['TYPE'] == 'M':
         code['type_id'] = 6
-    elif data['CODE'][0] == 'O':
+    elif data['TYPE'] == 'O':
         code['type_id'] = 4
-    elif data['CODE'][0] == 'P':
+    elif data['TYPE'] == 'P':
         code['type_id'] = 3
     else:
         return
