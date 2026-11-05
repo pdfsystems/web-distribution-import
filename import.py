@@ -369,9 +369,9 @@ def import_code(data):
         code['type_id'] = 8
     elif data['TYPE'] == 'S':
         if data['TYPE'] == 'MS':
-            code['st_inventoried'] = '1';
+            code['st_inventoried'] = '1'
         else:
-            code['st_inventoried'] = '0';
+            code['st_inventoried'] = '0'
         code['type_id'] = 31
     else:
         return
@@ -582,10 +582,10 @@ def import_vendor(data):
         data['CURRENCY^CODE'] = 'EUR'
 
     elif data['CURRENCY^CODE'] == "PO":
-        data['CURRENCY^CODE'] = "GBP";
+        data['CURRENCY^CODE'] = "GBP"
 
     elif data['CURRENCY^CODE'] == "YE":
-        data['CURRENCY^CODE'] = "JPY";
+        data['CURRENCY^CODE'] = "JPY"
 
     elif data['CURRENCY^CODE'] == "CD":
         data['CURRENCY^CODE'] = 'CAD'
