@@ -345,6 +345,8 @@ def import_code(data):
 
     if data['TYPE'] == 'P':
         code['type_id'] = 1
+        if data['INVENTORY^FLAG'] == 'N':
+            code['st_inventoried'] = '0'
     elif data['TYPE'] == 'C':
         code['type_id'] = 21
     elif data['TYPE'] == 'R':
@@ -2222,6 +2224,9 @@ if os.environ.get('IMPORT_STYLES', 'false') == 'true':
         (company))
     cursor.execute(
         "update `code` inner join `style` on `code`.`id` = `style`.`mill_unit_id` set `code`.`um_mill_unit` = 1 where `code`.`company_id` = %s",
+        (company))
+    cursor.execute(
+        "update `style` inner join `code` on `style`.`product_category_code_id` = `code`.`id` set `style`.`inventoried` = 0, `style`.`updated_at` = now() where `style`.`company_id` = %s and `code`.`st_inventoried` = 0",
         (company))
     cursor.execute(
         "insert into `style` (`company_id`, `line_id`, `name`, `product_category_code_id`, `default_warehouse_id`, `selling_unit_id`, `mill_unit_id`, `vendor_id`, `standard_quantity`, `legacy_style_number`) values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
