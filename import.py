@@ -545,6 +545,11 @@ def import_vendor(data):
     except:
         date_established = date.today()
 
+    if isset(data['TERMS^CODE']) and isinstance(data['TERMS^CODE'], float):
+        terms_code = int(data['TERMS^CODE'])
+    else:
+        terms_code = data['TERMS^CODE']
+
     vendor = {
         # 'fax': data['FAX'],
         'account_number': data['OUR^CUST ID'],
@@ -556,7 +561,7 @@ def import_vendor(data):
         'name': data['VENDOR NAME'],
         'notes': data['COMMENT'],
         'ship_via': data['SHIP VIA'],
-        'terms_id': get_code_id(13, data['TERMS^CODE'], True),
+        'terms_id': get_code_id(13, terms_code, True),
         'updated_at': date_established.isoformat(),
         'cut_yardage': '1' if data['DROP^SHIP^FLAG'] == 'Y' else '0',
     }
