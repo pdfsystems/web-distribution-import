@@ -2289,6 +2289,7 @@ if os.environ.get('IMPORT_PURCHASE_ORDER_DETAIL', 'false') == 'true':
         import_purchase_order_item(row)
         if index % 500 == 0:
             db.commit()
+    cursor.execute("update `purchase_order_item` inner join `item` on `purchase_order_item`.`item_id` = `item`.`id` set `purchase_order_item`.`mill_item_description` = `item`.`mill_description`, `purchase_order_item`.`updated_at` = now() where `purchase_order_item`.`mill_item_description` is null and `item`.`company_id` = %s", company)
     db.commit()
 if os.environ.get('IMPORT_PURCHASE_ORDER_NOTES', 'false') == 'true':
     print("Importing purchase order notes...")
