@@ -2261,6 +2261,7 @@ if os.environ.get('IMPORT_ITEMS', 'false') == 'true':
         import_item(item)
         if index % 500 == 0:
             db.commit()
+    cursor.execute("update `item` inner join `style` on `item`.`style_id` = `style`.`id` set `item`.`book` = 1, `style`.`book` = 1, `item`.`updated_at` = now() where `item`.`company_id` = %s and `style`.`legacy_style_number` like %s",(company, 'SB%'))
 
 if os.environ.get('IMPORT_SERVICES', 'false') == 'true':
     print("Importing services...")
