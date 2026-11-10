@@ -725,6 +725,9 @@ def import_customer(data):
         'updated_at': now,
     }
 
+    if data['CUST CLASS'] == 'R':
+        customer['standard_price'] = 'R'
+
     if isset(data['ADDRESS ONE']) and pattern_deleted_customer.match(data['ADDRESS ONE']):
         customer['deleted_at'] = now
 
