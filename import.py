@@ -1380,6 +1380,12 @@ def import_transaction(data, is_invoiced=False):
         order_date = parse(data['ORDER^DATE'])
     except:
         order_date = date.today()
+
+    if isset(data['SHIP TO^ZIP CODE']) and isinstance(data['SHIP TO^ZIP CODE'], float):
+        ship_to_postal_code = int(data['SHIP TO^ZIP CODE'])
+    else:
+        ship_to_postal_code = data['SHIP TO^ZIP CODE']
+
     transaction = {
         'active': 1,
         'client_auth_key': str(uuid.uuid4()).replace('-', ''),
@@ -1408,7 +1414,7 @@ def import_transaction(data, is_invoiced=False):
         'ship_to_city': data['SHIP TO CITY'],
         'ship_to_country_id': get_country_id(data['SHIP-TO^COUNTRY CD']),
         'ship_to_name': data['SHIP TO NAME'],
-        'ship_to_postal_code': data['SHIP TO^ZIP CODE'],
+        'ship_to_postal_code': ship_to_postal_code,
         'ship_to_street': data['SHIP TO ADDRESS 1'],
         'ship_to_street2': data['SHIP TO ADDRESS 2'],
         'sidemark': data['SIDE MARK'],
