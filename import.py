@@ -1204,6 +1204,22 @@ def import_item(data):
         print(f"Skipping duplicate item #{data['ITEM^NUMBER']}")
 
 
+def import_book(data):
+    if isempty(data['COLOR^ACCTNG CODE']):
+        return
+
+    item_id = get_id('item', 'item_number', data['ITEM^NUMBER'])
+    book_id = get_id('item', 'item_number', data['COLOR^ACCTNG CODE'])
+
+    if item_id is not None and book_id is not None:
+        insert_object('book_item', {
+            'book_id': book_id,
+            'item_id': item_id,
+            'created_at': now,
+            'updated_at': now,
+        })
+
+
 def import_service(data):
     service = {
         'company_id': company,
@@ -2262,6 +2278,12 @@ if os.environ.get('IMPORT_ITEMS', 'false') == 'true':
         if index % 500 == 0:
             db.commit()
     cursor.execute("update `item` inner join `style` on `item`.`style_id` = `style`.`id` set `item`.`book` = 1, `style`.`book` = 1, `item`.`updated_at` = now() where `item`.`company_id` = %s and `style`.`legacy_style_number` like %s",(company, 'SB%'))
+
+    books = get_iterator(data_directory + 'COLOR.TXT')
+    for index, book in books:
+        import_book(book)
+        if index % 500 == 0:
+            db.commit()
 
 if os.environ.get('IMPORT_SERVICES', 'false') == 'true':
     print("Importing services...")
