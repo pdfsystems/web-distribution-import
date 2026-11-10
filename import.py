@@ -1032,19 +1032,26 @@ def import_style(data):
 
     style_id = insert_object('style', style)
 
+    price = {
+        'company_id': company,
+        'line_id': line,
+        'currency_id': currency_usd_id,
+        'unit_id': style['selling_unit_id'],
+        'priceable_id': style_id,
+        'priceable_type': 'Style',
+        'primary': 1,
+        'created_at': now,
+        'updated_at': now,
+    }
+
     if data['PRICE 1'] > 0:
-        insert_object('item_price', {
-            'company_id': company,
-            'line_id': line,
-            'currency_id': currency_usd_id,
-            'unit_id': style['selling_unit_id'],
-            'wholesale_price': data['PRICE 1'],
-            'priceable_id': style_id,
-            'priceable_type': 'Style',
-            'primary': 1,
-            'created_at': now,
-            'updated_at': now,
-        })
+        price['wholesale_price'] = data['PRICE 1']
+
+    if data['PRICE 2'] > 0:
+        price['retail_price'] = data['PRICE 2']
+
+    if 'wholesale_price' in price or 'retail_price' in price:
+        insert_object('item_price', price)
 
     if data['MILLS^COST 1'] > 0:
         insert_object('style_cost', {
