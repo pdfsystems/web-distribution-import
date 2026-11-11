@@ -453,6 +453,12 @@ def import_rep(data):
         'updated_at': date_established.isoformat(),
     }
 
+    if isset(data['NOVEL CUST #^FOR INVOICE']):
+        rep['bills_client'] = 1
+        rep['bills_client_pricing'] = 0
+        rep['substitute_on_invoice'] = 1
+        rep['buy_sell_discount_percent'] = data['NOVEL REP^DISC PCT'] / 100
+
     if isset(data['END^DATE']):
         try:
             rep['end_date'] = parse(data['END^DATE']).isoformat()
