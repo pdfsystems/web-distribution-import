@@ -743,6 +743,7 @@ def import_customer(data):
     if data['CUST CLASS'] == 'R':
         customer['standard_price'] = 'R'
         customer['credit_limit'] = 9999999
+        customer['default_carrier_id'] = 106
 
     if isset(data['ADDRESS ONE']) and pattern_deleted_customer.match(data['ADDRESS ONE']):
         customer['deleted_at'] = now
