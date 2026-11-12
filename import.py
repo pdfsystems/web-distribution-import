@@ -707,10 +707,15 @@ def import_customer(data):
     else:
         discount_method = 'B'
 
+    if isset(data['COUNTRY^CODE']):
+        country_id = get_country_id(data['COUNTRY^CODE'])
+    else:
+        country_id = country_us_id
+
     customer = {
         'class_id': create_code_id(data['CUST CLASS'], 24),
         'company_id': company,
-        'country_id': country_us_id,
+        'country_id': country_id,
         'created_at': date_established.isoformat(),
         'credit_alert_id': create_code_id(data['CREDIT^ALERT'], 12),
         'credit_limit': data['LIMIT'],
@@ -731,8 +736,13 @@ def import_customer(data):
         'updated_at': now,
     }
 
+    if data['COUNTRY^CODE'] != 'US':
+        customer['default_carrier_id'] = None
+        customer['default_shipping_service_id'] = None
+
     if data['CUST CLASS'] == 'R':
         customer['standard_price'] = 'R'
+        customer['credit_limit'] = 9999999
 
     if isset(data['ADDRESS ONE']) and pattern_deleted_customer.match(data['ADDRESS ONE']):
         customer['deleted_at'] = now
