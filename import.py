@@ -2077,8 +2077,6 @@ if os.environ.get('IMPORT_WAREHOUSES', 'false') == 'true':
 
 if os.environ.get('IMPORT_CODES', 'false') == 'true':
     cursor.execute("delete from `code` where `editable` = 1 and `company_id` = %s", company)
-    cursor.execute("delete from `carrier` where `company_id` = %s", company)
-    cursor.execute("delete from `shipping_service` where `company_id` = %s", company)
 
 db.commit()
 
