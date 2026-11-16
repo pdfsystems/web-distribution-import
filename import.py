@@ -1602,6 +1602,17 @@ def import_transaction(data, is_invoiced=False):
 
     else:
         transaction['status'] = 'O'
+        if data['SHIP VIA'] in ['RECOGE']:
+            transaction['shipping_service_id'] = 159
+        elif data['SHIP VIA'] in ['ANDRE', 'ANDRES']:
+            transaction['shipping_service_id'] = 161
+        elif data['SHIP VIA'] in ['GERARD', 'GERARDO']:
+            transaction['shipping_service_id'] = 163
+        elif data['SHIP VIA'] in ['LUPITA']:
+            transaction['shipping_service_id'] = 160
+        else:
+            transaction['shipping_service_id'] = 164
+
 
     transaction_id = insert_object('transaction', transaction)
 
