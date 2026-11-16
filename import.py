@@ -737,7 +737,7 @@ def import_customer(data):
     }
 
     if data['COUNTRY^CODE'] != 'US':
-        customer['default_carrier_id'] = None
+        customer['default_carrier_id'] = 107
         customer['default_shipping_service_id'] = None
 
     if data['CUST CLASS'] == 'R':
