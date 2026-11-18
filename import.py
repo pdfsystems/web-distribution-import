@@ -1610,7 +1610,7 @@ def import_transaction(data, is_invoiced=False):
             transaction['shipping_service_id'] = 163
         elif data['SHIP VIA'] in ['LUPITA']:
             transaction['shipping_service_id'] = 160
-        else:
+        elif isempty(transaction['shipping_service_id']):
             transaction['shipping_service_id'] = 164
 
 
