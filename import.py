@@ -78,7 +78,7 @@ def update_object(table, where_column, where_value, object):
 
 def get_reader(path, header=0, quoting=3):
     reader = pandas.read_csv(path, header=header, delimiter='	', encoding='latin1', low_memory=False,
-                             quoting=quoting)
+                             quoting=quoting, dtype={'NOVEL CUST #^FOR INVOICE': str})
     reader.fillna(value='')
     return reader
 
@@ -453,12 +453,6 @@ def import_rep(data):
         'updated_at': date_established.isoformat(),
     }
 
-    if isset(data['NOVEL CUST #^FOR INVOICE']):
-        rep['bills_client'] = 1
-        rep['bills_client_pricing'] = 0
-        rep['substitute_on_invoice'] = 1
-        rep['buy_sell_discount_percent'] = data['NOVEL REP^DISC PCT'] / 100
-
     if isset(data['END^DATE']):
         try:
             rep['end_date'] = parse(data['END^DATE']).isoformat()
@@ -482,6 +476,17 @@ def import_rep(data):
     rep['country_id'] = get_country_id(data['COUNTRY'])
 
     rep_id = insert_object('rep', rep)
+
+    if isset(data['NOVEL CUST #^FOR INVOICE']):
+        insert_object('custom_field_value', {
+            'company_id': company,
+            'source_id': rep_id,
+            'source_type': 'Rep',
+            'field_id': 258,
+            'value': data['NOVEL CUST #^FOR INVOICE'],
+            'created_at': now,
+            'updated_at': now
+        })
 
     if isset(data['ADDRESS ONE']):
         insert_address(source_id=rep_id,
