@@ -115,6 +115,17 @@ def get_state_id(country, code):
     state = cursor.fetchone()
     if state is not None:
         return state['id']
+    elif country == 140:
+        if code in ['CA']:
+            return get_state_id(country, 'CM')
+        elif code in ['MC']:
+            return get_state_id(country, 'MI')
+        elif code in ['DU']:
+            return get_state_id(country, 'DG')
+        elif code in ['QE']:
+            return get_state_id(country, 'QT')
+        else:
+            return None
     else:
         return None
 
