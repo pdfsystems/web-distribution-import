@@ -766,7 +766,7 @@ def import_customer(data):
 
     state_id = get_state_id(customer['country_id'], data['ST'])
 
-    if customer['country_id'] == country_us_id and not isempty(data['RESALE NUMBER']) and not isempty(state_id):
+    if not isempty(data['RESALE NUMBER']) and not isempty(state_id):
         resale_data = {
             'created_at': now,
             'customer_id': customer_id,
