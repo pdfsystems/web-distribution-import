@@ -775,7 +775,11 @@ def import_customer(data):
 
     customer_id = insert_object('customer', customer)
 
-    state_id = get_state_id(customer['country_id'], data['ST'])
+
+    if data['CUST #'] == '027325':
+        state_id = get_state_id(customer['country_id'], 'NA')
+    else:
+        state_id = get_state_id(customer['country_id'], data['ST'])
 
     if not isempty(data['RESALE NUMBER']) and not isempty(state_id):
         resale_data = {
