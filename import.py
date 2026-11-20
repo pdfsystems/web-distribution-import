@@ -2077,6 +2077,7 @@ if os.environ.get('IMPORT_REP_EMPLOYEES', 'false') == 'true':
 
 if os.environ.get('IMPORT_REPS', 'false') == 'true':
     cursor.execute("delete from `rep_discount_commission` where `company_id` = %s", company)
+    cursor.execute("delete from `custom_field_value` where `company_id` = %s and `source_type` = %s", (company, 'Rep'))
     cursor.execute(
         "delete `address` from `address` inner join `rep` on `address`.`addressable_id` = `rep`.`id` and `address`.`addressable_type` = 'Rep' where `rep`.`company_id` = %s",
         (company))
