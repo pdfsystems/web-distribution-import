@@ -723,7 +723,9 @@ def import_customer(data):
     else:
         discount_method = 'B'
 
-    if isset(data['COUNTRY^CODE']):
+    if data['ST'] == 'PR':
+        country_id = 176
+    elif isset(data['COUNTRY^CODE']):
         country_id = get_country_id(data['COUNTRY^CODE'])
     else:
         country_id = country_us_id
