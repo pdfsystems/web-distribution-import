@@ -703,6 +703,9 @@ def import_customer(data):
     if isempty(data['CUSTOMER NAME']):
         data['CUSTOMER NAME'] = data['CUST #']
 
+    if data['COUNTRY^CODE'] == 'UA':
+        data['COUNTRY^CODE'] = 'US'
+
     try:
         date_established = parse(data['DATE EST'])
     except:
