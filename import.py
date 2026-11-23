@@ -1254,6 +1254,17 @@ def import_item(data):
 
     try:
         item_id = insert_object('item', item)
+
+        if isset(data['USER^DEFINED']):
+            insert_object('custom_field_value', {
+                'company_id': company,
+                'source_id': item_id,
+                'source_type': 'Item',
+                'field_id': 259,
+                'value': data['USER^DEFINED'],
+                'created_at': now,
+                'updated_at': now
+            })
     except pymysql.err.IntegrityError:
         print(f"Skipping duplicate item #{data['ITEM^NUMBER']}")
 
@@ -2034,6 +2045,7 @@ if os.environ.get('IMPORT_ITEMS', 'false') == 'true':
     cursor.execute("delete from `item_inquiry` where `company_id` = %s", company)
     cursor.execute("delete from `item` where `company_id` = %s", company)
     cursor.execute("delete from `item_price` where `company_id` = %s and `priceable_type` = 'Item'", company)
+    cursor.execute("delete from `custom_field_value` where `company_id` = %s and `source_type` = %s", (company, 'Item'))
 
 if os.environ.get('IMPORT_STYLES', 'false') == 'true':
     cursor.execute(
