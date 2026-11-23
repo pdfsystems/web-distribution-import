@@ -484,6 +484,9 @@ def import_rep(data):
     else:
         data['COUNTRY'] = 'US'
 
+    if isset(data['NOVEL REP^DISC PCT']):
+        rep['customer_default_discount_percent'] = data['NOVEL REP^DISC PCT'] / 100
+
     rep['country_id'] = get_country_id(data['COUNTRY'])
 
     rep_id = insert_object('rep', rep)
