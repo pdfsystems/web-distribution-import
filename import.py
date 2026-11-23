@@ -781,21 +781,24 @@ def import_customer(data):
     else:
         state_id = get_state_id(customer['country_id'], data['ST'])
 
-    if not isempty(data['RESALE NUMBER']) and not isempty(state_id):
-        resale_data = {
-            'created_at': now,
-            'customer_id': customer_id,
-            'resale_number': data['RESALE NUMBER'],
-            'state_id': state_id,
-            'updated_at': now,
-        }
-        if not isempty(data['RESALE^NUMBER^DATE']):
-            try:
-                resale_data['expiration_date'] = parse(data['RESALE^NUMBER^DATE']).isoformat()
-            except:
-                print(f"Invalid resale expiration date ({data['RESALE^NUMBER^DATE']})")
+    if not isempty(data['RESALE NUMBER']):
+        if isset(state_id):
+            resale_data = {
+                'created_at': now,
+                'customer_id': customer_id,
+                'resale_number': data['RESALE NUMBER'],
+                'state_id': state_id,
+                'updated_at': now,
+            }
+            if not isempty(data['RESALE^NUMBER^DATE']):
+                try:
+                    resale_data['expiration_date'] = parse(data['RESALE^NUMBER^DATE']).isoformat()
+                except:
+                    print(f"Invalid resale expiration date ({data['RESALE^NUMBER^DATE']})")
 
-        insert_object('resale_certificate', resale_data)
+            insert_object('resale_certificate', resale_data)
+        else:
+            print(f"Unable to import resale certificate for customer {data['CUST #']} with missing state ({data['ST']})")
 
     if isset(data['ADDRESS ONE']) and isset(data['CITY']):
         insert_address(source_id=customer_id,
